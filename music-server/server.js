@@ -1,8 +1,11 @@
+// server.js
 const express = require("express");
 const cors    = require("cors");
 const path    = require("path");
 const fs      = require("fs");
 const dotenv  = require("dotenv");
+const http    = require("http");
+const { Server } = require("socket.io");
 
 // ===== KIỂM TRA .ENV =====
 const result = dotenv.config();
@@ -22,8 +25,33 @@ const startServer = async () => {
 
     const app = express();
 
+    // ===== TẠO HTTP SERVER (bọc express để dùng với socket.io) =====
+    const httpServer = http.createServer(app);
+
+    // ===== SOCKET.IO SETUP =====
+    const io = new Server(httpServer, {
+      cors: {
+        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+      pingTimeout: 60000,
+      pingInterval: 25000,
+    });
+
+    // Middleware xác thực socket
+    const socketAuthMiddleware = require("./socket/socketMiddleware");
+    io.use(socketAuthMiddleware);
+
+    // Gắn room handler
+    const roomHandler = require("./socket/roomHandler");
+    roomHandler(io);
+
     // ===== MIDDLEWARE =====
-    app.use(cors());
+    app.use(cors({
+      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      credentials: true,
+    }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
@@ -85,6 +113,7 @@ const startServer = async () => {
     app.use("/api/users",         require("./routes/userRoutes"));
     app.use("/api/notifications", require("./routes/notificationRoutes"));
     app.use("/api/trash",         require("./routes/trashRoutes"));
+    app.use("/api/rooms",         require("./routes/roomRoutes")); // ✅ Room routes
 
     // ===== ROUTE GỐC =====
     app.get("/", (req, res) => {
@@ -96,7 +125,8 @@ const startServer = async () => {
           playlists:     "/api/playlists",
           users:         "/api/users",
           notifications: "/api/notifications",
-          trash:         "/api/trash", // ✅ thêm vào docs
+          trash:         "/api/trash",
+          rooms:         "/api/rooms", // ✅ thêm vào docs
         },
       });
     });
@@ -106,10 +136,12 @@ const startServer = async () => {
     app.use(errorHandler);
 
     // ===== START SERVER =====
+    // ⚠️ Dùng httpServer.listen thay vì app.listen
     const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
+    httpServer.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);
       console.log(`📡 API: http://localhost:${PORT}/api`);
+      console.log(`🔌 Socket.io: http://localhost:${PORT}`);
     });
 
   } catch (error) {

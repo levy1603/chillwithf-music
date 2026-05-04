@@ -4,7 +4,7 @@ const {
   audioStorage,
   coverStorage,
   videoStorage,
-  avatarStorage, // ✅ Thêm
+  avatarStorage, 
 } = require("../config/cloudinary");
 
 /* ── File Filter ── */
@@ -33,7 +33,7 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Avatar filter riêng (single field)
+
 const avatarFilter = (req, file, cb) => {
   const allowed = ["image/jpeg", "image/png", "image/webp"];
   if (allowed.includes(file.mimetype)) {

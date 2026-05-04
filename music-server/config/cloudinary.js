@@ -49,8 +49,8 @@ const avatarStorage = new CloudinaryStorage({
     resource_type: "image",
     public_id:     `avatar-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     transformation: [
-      // ✅ Auto crop vuông + optimize
-      { width: 400, height: 400, crop: "fill", gravity: "face", quality: "auto" },
+      // Giữ nguyên framing gốc để avatar sau khi lưu không bị đổi bố cục
+      { width: 800, height: 800, crop: "limit", quality: "auto" },
     ],
   }),
 });
