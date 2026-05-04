@@ -17,7 +17,7 @@ import {
   FaCheckCircle,
 } from "react-icons/fa";
 import AuthLayout from "./AuthLayout";
-import "./Auth.css";
+import "../styles/components/Auth.css";
 
 const RegisterForm = () => {
   const { register } = useAuth();

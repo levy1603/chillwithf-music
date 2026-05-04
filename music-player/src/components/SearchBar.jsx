@@ -4,7 +4,7 @@ import { FaSearch, FaTimes, FaFilter } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useMusicContext } from "../context/MusicContext";
 import songAPI from "../api/songAPI";
-import "./SearchBar.css";
+import "../styles/components/SearchBar.css";
 
 const SearchBar = () => {
   const { songs, getCoverURL, playSong } = useMusicContext();

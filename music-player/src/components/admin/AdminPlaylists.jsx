@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FaTrash, FaSearch, FaLock, FaGlobe } from "react-icons/fa";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
-import "./AdminSongs.css";
+import "../../styles/components/admin/AdminSongs.css";
 
 const INITIAL_TOAST = {
   open: false,

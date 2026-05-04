@@ -23,7 +23,7 @@ import {
 } from "react-icons/fa";
 import songAPI from "../api/songAPI";
 import LRCEditor from "./LRCEditor";
-import "./UploadSong.css";
+import "../styles/components/UploadSong.css";
 
 /* ════════════════════════════════════════════════════════════
    CONSTANTS

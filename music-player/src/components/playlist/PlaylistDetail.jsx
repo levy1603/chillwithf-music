@@ -11,7 +11,7 @@ import {
   FaTrashAlt,
 } from "react-icons/fa";
 import { useMusicContext } from "../../context/MusicContext";
-import "./PlaylistDetail.css";
+import "../../styles/components/playlist/PlaylistDetail.css";
 
 const PlaylistDetail = ({
   playlist,

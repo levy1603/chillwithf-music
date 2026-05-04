@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import { useMusicContext } from "../../context/MusicContext";
 import playlistAPI from "../../api/playlistAPI";
-import "./AddToPlaylistModal.css";
+import "../../styles/components/playlist/AddToPlaylistModal.css";
 
 const DEFAULT_PLAYLIST_COVER = "/images/default-playlist.jpg";
 

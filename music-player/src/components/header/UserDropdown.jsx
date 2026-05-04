@@ -7,9 +7,9 @@ import {
   FaSignOutAlt,
   FaCloudUploadAlt,
 } from "react-icons/fa";
-import getAvatarURL from "../../utils/getAvatarURL";
+import getAvatarURL, { DEFAULT_AVATAR_URL } from "../../utils/getAvatarURL";
 
-const DEFAULT_AVATAR = "/images/default-avatar.png";
+const DEFAULT_AVATAR = DEFAULT_AVATAR_URL;
 
 const UserDropdown = ({ user, onNavigate, onShowBgPanel, onLogout }) => {
   const avatarURL = getAvatarURL(user?.avatar, 44);

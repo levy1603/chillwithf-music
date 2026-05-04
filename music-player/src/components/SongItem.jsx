@@ -12,7 +12,7 @@ import { useMusicContext } from "../context/MusicContext";
 import { useAuth } from "../context/AuthContext";
 import AddToPlaylistModal from "./playlist/AddToPlaylistModal";
 import ConfirmModal from "./common/ConfirmModal";
-import "./SongItem.css";
+import "../styles/components/SongItem.css";
 
 const DEFAULT_COVER = "/images/default-cover.jpg";
 

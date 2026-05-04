@@ -10,7 +10,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { MusicProvider } from "./context/MusicContext";
 import { NotificationProvider } from "./context/NotificationContext";
 
-import Header from "./components/header/index";
+import Header from "./components/header/Header";
 import Sidebar from "./components/Sidebar";
 import MusicPlayer from "./components/MusicPlayer";
 
@@ -26,7 +26,8 @@ import ProfilePage from "./pages/ProfilePage";
 import SearchResults from "./pages/SearchResults";
 import AdminPage from "./pages/admin/AdminPage";
 import NotificationsPage from "./pages/NotificationsPage";
-
+import RoomLobby from "./pages/RoomPage/RoomLobby";
+import RoomDetail from "./pages/RoomPage/RoomDetail";
 import usePageTitle from "./hooks/usePageTitle";
 import "./App.css";
 
@@ -39,7 +40,7 @@ import "./App.css";
 const SplashWrapper = ({ children }) => {
   const { loading } = useAuth();
   const [showSplash, setShowSplash] = useState(true);
-  const [isHiding, setIsHiding]     = useState(false);
+  const [isHiding, setIsHiding] = useState(false);
 
   useEffect(() => {
     // Chờ auth check xong VÀ tối thiểu 2.5 giây
@@ -233,7 +234,8 @@ const MusicAppRoutes = () => {
             </AdminRoute>
           }
         />
-
+        <Route path="/rooms" element={<RoomLobby />} />
+        <Route path="/rooms/:roomId" element={<RoomDetail />} />
         {/* ── 404 ── */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -249,9 +251,9 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/login"    element={<Login />} />
+      <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
-      <Route path="/*"        element={<MusicAppRoutes />} />
+      <Route path="/*" element={<MusicAppRoutes />} />
     </Routes>
   );
 }

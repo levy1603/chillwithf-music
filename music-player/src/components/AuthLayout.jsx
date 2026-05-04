@@ -8,7 +8,7 @@ import {
   FaHeart,
   FaPlay,
 } from "react-icons/fa";
-import "./Auth.css";
+import "../styles/components/Auth.css";
 
 const AuthLayout = ({
   badgeIcon,

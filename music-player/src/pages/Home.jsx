@@ -12,7 +12,7 @@ import {
 } from "react-icons/fa";
 import SongList from "../components/SongList";
 import { useMusicContext } from "../context/MusicContext";
-import "./Home.css";
+import "../styles/pages/Home.css";
 
 const MOOD_CHIPS = [
   { key: "all", label: "Tất cả" },

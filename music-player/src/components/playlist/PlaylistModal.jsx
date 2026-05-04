@@ -1,7 +1,7 @@
 // components/playlist/PlaylistModal.js
 import React, { useState, useEffect, useCallback } from "react";
 import { FaTimes } from "react-icons/fa";
-import "./PlaylistModal.css";
+import "../../styles/components/playlist/PlaylistModal.css";
 
 const DEFAULT_FORM_DATA = {
   name: "",

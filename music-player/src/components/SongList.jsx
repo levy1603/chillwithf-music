@@ -2,7 +2,7 @@
 import React from "react";
 import { FaClock } from "react-icons/fa";
 import SongItem from "./SongItem";
-import "./SongList.css";
+import "../styles/components/SongList.css";
 
 const SongList = ({ songs = [], title, source = "home", queue = [] }) => {
   return (

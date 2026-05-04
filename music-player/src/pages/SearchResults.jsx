@@ -11,7 +11,7 @@ import {
 } from "react-icons/fa";
 import SongList from "../components/SongList";
 import songAPI from "../api/songAPI";
-import "./SearchResults.css";
+import "../styles/pages/SearchResults.css";
 
 const PAGE_SIZE = 12;
 

@@ -9,10 +9,11 @@ import BackgroundPanel from "./BackgroundPanel";
 import SearchBar from "../SearchBar";
 import NotificationBell from "./NotificationBell";
 import "./Header.css";
-import getAvatarURL from "../../utils/getAvatarURL";
+import getAvatarURL, { DEFAULT_AVATAR_URL } from "../../utils/getAvatarURL";
 import logoImg from "../../assets/barbara-genshin-impact.gif";
+import { MdMeetingRoom } from "react-icons/md";
 
-const DEFAULT_AVATAR = "/images/default-avatar.png";
+const DEFAULT_AVATAR = DEFAULT_AVATAR_URL;
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -54,7 +55,7 @@ const Header = () => {
       closeAllPanels();
       navigate(path);
     },
-    [closeAllPanels, navigate]
+    [closeAllPanels, navigate],
   );
 
   const handleToggleMenu = useCallback(() => {
@@ -76,11 +77,7 @@ const Header = () => {
       <div className="header-left">
         <Link to="/" className="header-logo">
           <div className="logo-icon-wrapper">
-            <img
-              src={logoImg}
-              alt="ChillWithF Logo"
-              className="logo-icon"
-            />
+            <img src={logoImg} alt="ChillWithF Logo" className="logo-icon" />
             <span className="logo-wave-3" />
             <span className="logo-wave-4" />
             <span className="logo-wave-5" />
@@ -89,8 +86,15 @@ const Header = () => {
           </div>
           <h1>ChillWithF</h1>
         </Link>
-
         <SearchBar />
+      </div>
+            {/* ===== CENTER ===== */}
+      <div className="header-center">
+        <Link to="/rooms" className="room-music-btn">
+          <MdMeetingRoom className="room-icon" />
+          <span>Phòng nhạc</span>
+          <span className="room-badge-live">LIVE</span>
+        </Link>
       </div>
 
       {/* ===== RIGHT ===== */}
@@ -115,7 +119,9 @@ const Header = () => {
                   }}
                 />
                 <span className="user-name">{user?.username}</span>
-                <FaChevronDown className={`chevron ${showMenu ? "rotated" : ""}`} />
+                <FaChevronDown
+                  className={`chevron ${showMenu ? "rotated" : ""}`}
+                />
               </button>
 
               {showMenu && !showBgPanel && (

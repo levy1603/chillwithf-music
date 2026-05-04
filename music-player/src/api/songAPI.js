@@ -1,13 +1,13 @@
-// src/api/songAPI.js
+﻿// src/api/songAPI.js
 import axiosClient from "./axiosClient";
 import axios from "axios";
 
 const BASE_URL = "http://localhost:5000/api";
 
-/* ── Helper: lấy token ── */
+/* â”€â”€ Helper: láº¥y token â”€â”€ */
 const getToken = () => localStorage.getItem("token");
 
-/* ── Helper: tạo config upload có progress ── */
+/* â”€â”€ Helper: táº¡o config upload cÃ³ progress â”€â”€ */
 const createUploadConfig = (onProgress, signal) => ({
   headers: {
     "Content-Type": "multipart/form-data",
@@ -25,35 +25,35 @@ const createUploadConfig = (onProgress, signal) => ({
 });
 
 const songAPI = {
-  /* ═══════════════════════════════════════
-     PUBLIC - Bài đã được duyệt
-  ═══════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     PUBLIC - BÃ i Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-  // Lấy danh sách bài hát (chỉ approved)
+  // Láº¥y danh sÃ¡ch bÃ i hÃ¡t (chá»‰ approved)
   getAll: (params = {}) => {
     return axiosClient.get("/songs", { params });
   },
 
-  // Lấy filter options
+  // Láº¥y filter options
   getFilterOptions: () => {
     return axiosClient.get("/songs/filter-options");
   },
 
-  // Top bài hát (chỉ approved)
+  // Top bÃ i hÃ¡t (chá»‰ approved)
   getTop: (limit = 10) => {
     return axiosClient.get("/songs/top", { params: { limit } });
   },
 
-  // Chi tiết 1 bài (chỉ approved)
+  // Chi tiáº¿t 1 bÃ i (chá»‰ approved)
   getById: (id) => {
     return axiosClient.get(`/songs/${id}`);
   },
 
-  /* ═══════════════════════════════════════
-     USER - Quản lý bài của mình
-  ═══════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     USER - Quáº£n lÃ½ bÃ i cá»§a mÃ¬nh
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-  // Lịch sử upload (cả pending / rejected / approved)
+  // Lá»‹ch sá»­ upload (cáº£ pending / rejected / approved)
   getMySongs: () => {
     return axiosClient.get("/songs/my-songs");
   },
@@ -62,26 +62,26 @@ const songAPI = {
     return axiosClient.get("/songs/my-songs");
   },
 
-  // Upload bài mới → backend sẽ set status: "pending"
+  // Upload bÃ i má»›i â†’ backend sáº½ set status: "pending"
   create: (formData, onProgress, signal) => {
     return axios
       .post(`${BASE_URL}/songs`, formData, createUploadConfig(onProgress, signal))
       .then((res) => res.data);
   },
 
-  // Cập nhật bài hát
+  // Cáº­p nháº­t bÃ i hÃ¡t
   update: (id, formData, onProgress, signal) => {
     return axios
       .put(`${BASE_URL}/songs/${id}`, formData, createUploadConfig(onProgress, signal))
       .then((res) => res.data);
   },
 
-  // Xoá bài hát
+  // XoÃ¡ bÃ i hÃ¡t
   delete: (id) => {
     return axiosClient.delete(`/songs/${id}`);
   },
 
-  // Tăng lượt play
+  // TÄƒng lÆ°á»£t play
   play: (id) => {
     return axiosClient.put(`/songs/${id}/play`);
   },
@@ -91,9 +91,9 @@ const songAPI = {
     return axiosClient.put(`/songs/${id}/like`);
   },
 
-  /* ═══════════════════════════════════════
-     ADMIN - Quản lý upload
-  ═══════════════════════════════════════ */
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     ADMIN - Quáº£n lÃ½ upload
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
   adminGetAllUploads: (params = {}) => {
     return axiosClient.get("/songs/admin/uploads", { params });
@@ -111,25 +111,32 @@ const songAPI = {
     return axiosClient.delete(`/songs/${id}`);
   },
 
-  /* ═══════════════════════════════════════
+  /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
      HELPER
-  ═══════════════════════════════════════ */
+  â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-  // Lấy URL audio
+  // Láº¥y URL audio
   getAudioURL: (song) => {
     if (!song?.audioFile) return null;
     if (song.audioFile.startsWith("http")) return song.audioFile;
     return `${BASE_URL.replace("/api", "")}/uploads/songs/${song.audioFile}`;
   },
 
-  // Lấy URL video
+  // Láº¥y URL video
   getVideoURL: (song) => {
-    if (!song?.videoFile) return null;
-    if (song.videoFile.startsWith("http")) return song.videoFile;
-    return `${BASE_URL.replace("/api", "")}/uploads/videos/${song.videoFile}`;
+    const rawVideo =
+      song?.videoFile ||
+      song?.videoUrl ||
+      song?.videoURL ||
+      song?.youtubeUrl ||
+      song?.youtubeURL;
+
+    if (!rawVideo) return null;
+    if (rawVideo.startsWith("http")) return rawVideo;
+    return `${BASE_URL.replace("/api", "")}/uploads/videos/${rawVideo}`;
   },
 
-  // Lấy URL cover
+  // Láº¥y URL cover
   getCoverURL: (song) => {
     if (!song?.coverImage) return null;
     if (song.coverImage === "default-cover.jpg") {

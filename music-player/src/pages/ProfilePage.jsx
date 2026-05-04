@@ -8,12 +8,12 @@ import {
 } from "react-icons/fa";
 import { useAuth }      from "../context/AuthContext";
 import userAPI          from "../api/userAPI";
-import getAvatarURL     from "../utils/getAvatarURL";
+import getAvatarURL, { DEFAULT_AVATAR_URL } from "../utils/getAvatarURL";
 import MySongsList      from "../components/MySongsList";
-import "./ProfilePage.css";
+import "../styles/pages/ProfilePage.css";
 
 const MAX_AVATAR_SIZE = 5 * 1024 * 1024;
-const DEFAULT_AVATAR  = "https://i.pravatar.cc/150";
+const DEFAULT_AVATAR  = DEFAULT_AVATAR_URL;
 
 const revokeAvatarPreview = (url) => {
   if (url?.startsWith("blob:")) URL.revokeObjectURL(url);
@@ -74,6 +74,7 @@ const ProfilePage = () => {
 
     const baseUrl = getAvatarURL(user?.avatar, 150);
     if (!baseUrl) return DEFAULT_AVATAR;
+    if (baseUrl.startsWith("data:")) return baseUrl;
 
     const sep = baseUrl.includes("?") ? "&" : "?";
     return `${baseUrl}${sep}t=${avatarCacheKey}`;

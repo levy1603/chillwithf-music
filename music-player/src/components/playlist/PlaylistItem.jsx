@@ -10,7 +10,7 @@ import {
   FaMusic,
 } from "react-icons/fa";
 import { useMusicContext } from "../../context/MusicContext";
-import "./PlaylistItem.css";
+import "../../styles/components/playlist/PlaylistItem.css";
 
 const DEFAULT_PLAYLIST_COVER = "/images/default-playlist.jpg";
 

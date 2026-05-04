@@ -1346,3 +1346,59 @@
     height: 100px;
   }
 }
+
+/* components/Header/Header.css - thêm vào cuối */
+
+/* ===== HEADER CENTER ===== */
+.header-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.room-music-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 18px;
+  background: linear-gradient(135deg, #6c63ff, #e040fb);
+  border-radius: 25px;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(108, 99, 255, 0.4);
+}
+
+.room-music-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(108, 99, 255, 0.6);
+  color: #fff;
+}
+
+.room-music-btn:active {
+  transform: translateY(0);
+}
+
+.room-icon {
+  font-size: 1.2rem;
+}
+
+/* Badge LIVE nhấp nháy */
+.room-badge-live {
+  background: #ff4444;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 4px;
+  letter-spacing: 0.5px;
+  animation: pulse-live 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-live {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.7; transform: scale(0.95); }
+}

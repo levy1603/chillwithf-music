@@ -9,7 +9,7 @@ import {
 import songAPI  from "../api/songAPI";
 import trashAPI from "../api/trashAPI";
 import { useMusicContext } from "../context/MusicContext";
-import "./MySongsList.css";
+import "../styles/components/MySongsList.css";
 
 const BASE_URL = "http://localhost:5000";
 

@@ -6,7 +6,8 @@ import {
   FaExternalLinkAlt, FaTrash,
 } from "react-icons/fa";
 import { useNotifications } from "../../context/NotificationContext";
-import "./AdminNotificationBell.css";
+import getAvatarURL from "../../utils/getAvatarURL";
+import "../../styles/components/admin/AdminNotificationBell.css";
 
 /* ══════════════════════════════════════════
    Config theo type
@@ -54,8 +55,10 @@ const formatTime = (dateStr) => {
 
 const AdminNotifAvatar = ({ noti, cfg }) => {
   if (noti.type === "new_upload") {
+    const avatarSeed =
+      noti.sender?._id || noti.sender?.email || noti.sender?.username;
     const userAvatar = noti.sender?.avatar
-      ? `http://localhost:5000${noti.sender.avatar}`
+      ? getAvatarURL(noti.sender.avatar, 40, avatarSeed)
       : null;
 
     return (

@@ -4,7 +4,7 @@ import { FaTrash, FaSearch, FaHeadphones, FaHeart } from "react-icons/fa";
 import { useMusicContext } from "../../context/MusicContext";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
-import "./AdminSongs.css";
+import "../../styles/components/admin/AdminSongs.css";
 
 const INITIAL_TOAST = {
   open: false,

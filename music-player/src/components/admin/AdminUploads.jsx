@@ -11,7 +11,7 @@ import {
 import songAPI from "../../api/songAPI";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
-import "./AdminUploads.css";
+import "../../styles/components/admin/AdminUploads.css";
 
 /* ════════════════════════════════════════════════════════════
    CONSTANTS & HELPERS

@@ -32,10 +32,10 @@ import { useMusicContext } from "../context/MusicContext";
 import { useAuth } from "../context/AuthContext";
 import AddToPlaylistModal from "../components/playlist/AddToPlaylistModal";
 import { parseLRC, getCurrentLineIndex } from "../utils/lrcParser";
-import "./SongDetail.css";
-import getAvatarURL from "../utils/getAvatarURL";
+import "../styles/pages/SongDetail.css";
+import getAvatarURL, { DEFAULT_AVATAR_URL } from "../utils/getAvatarURL";
 
-const DEFAULT_AVATAR = "/images/default-avatar.png";
+const DEFAULT_AVATAR = DEFAULT_AVATAR_URL;
 const DEFAULT_COVER = "/images/default-cover.jpg";
 
 /* ══════════════════════════════════════════

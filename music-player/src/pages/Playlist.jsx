@@ -6,7 +6,7 @@ import ConfirmModal from "../components/common/ConfirmModal";
 import { useMusicContext } from "../context/MusicContext";
 import { useAuth } from "../context/AuthContext";
 import { FaHistory, FaTrash, FaMusic } from "react-icons/fa";
-import "./Playlist.css";
+import "../styles/pages/Playlist.css";
 
 const Playlist = () => {
   const { songs, listenedSongIds, clearListened } = useMusicContext();

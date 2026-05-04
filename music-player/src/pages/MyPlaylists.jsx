@@ -7,7 +7,7 @@ import PlaylistModal from "../components/playlist/PlaylistModal";
 import PlaylistDetail from "../components/playlist/PlaylistDetail";
 import ConfirmModal from "../components/common/ConfirmModal";
 import usePlaylists from "../hooks/usePlaylists";
-import "./MyPlaylists.css";
+import "../styles/pages/MyPlaylists.css";
 
 const VIEW_MODE = {
   GRID: "grid",

@@ -1,7 +1,7 @@
 // src/components/SleepTimerPanel.js
 import React from "react";
 import { FaClock, FaTimes, FaPlay, FaStop } from "react-icons/fa";
-import "./SleepTimerPanel.css";
+import "../styles/components/SleepTimerPanel.css";
 
 const PRESETS = [5, 10, 15, 20, 30, 45, 60, 90];
 

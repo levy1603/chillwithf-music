@@ -13,7 +13,7 @@ import {
   FaCompass,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
-import "./Sidebar.css";
+import "../styles/components/Sidebar.css";
 
 const EXPLORE_ITEMS = [
   { label: "Nhạc Việt Hot", icon: FaCompactDisc },

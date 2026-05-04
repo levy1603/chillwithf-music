@@ -10,7 +10,8 @@ import {
 } from "react-icons/fa";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
-import "./AdminUsers.css";
+import getAvatarURL from "../../utils/getAvatarURL";
+import "../../styles/components/admin/AdminUsers.css";
 
 const INITIAL_TOAST = {
   open: false,
@@ -235,6 +236,9 @@ const AdminUsers = () => {
           <tbody>
             {filtered.map((user, index) => {
               const isBusy = actionLoading === user._id;
+              const avatarSeed = user._id || user.email || user.username;
+              const avatarURL = getAvatarURL(user.avatar, 32, avatarSeed);
+              const fallbackAvatarURL = getAvatarURL(null, 32, avatarSeed);
 
               return (
                 <tr key={user._id} className={user.isBanned ? "banned-row" : ""}>
@@ -242,14 +246,10 @@ const AdminUsers = () => {
                   <td>
                     <div className="user-cell">
                       <img
-                        src={
-                          user.avatar
-                            ? `http://localhost:5000${user.avatar}`
-                            : `https://i.pravatar.cc/32?u=${user._id}`
-                        }
+                        src={avatarURL}
                         alt={user.username}
                         onError={(event) => {
-                          event.target.src = `https://i.pravatar.cc/32?u=${user._id}`;
+                          event.currentTarget.src = fallbackAvatarURL;
                         }}
                       />
                       <span>{user.username}</span>

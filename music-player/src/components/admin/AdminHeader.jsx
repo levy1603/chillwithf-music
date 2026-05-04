@@ -3,7 +3,8 @@ import React from "react";
 import { FaUserShield } from "react-icons/fa";
 import { useAuth }                from "../../context/AuthContext";
 import AdminNotificationBell      from "./AdminNotificationBell";
-import "./AdminHeader.css";
+import getAvatarURL               from "../../utils/getAvatarURL";
+import "../../styles/components/admin/AdminHeader.css";
 
 const TAB_TITLES = {
   stats:     "Dashboard",
@@ -16,6 +17,9 @@ const TAB_TITLES = {
 
 const AdminHeader = ({ activeTab, onNavigateToSong }) => {
   const { user } = useAuth();
+  const avatarSeed = user?._id || user?.email || user?.username;
+  const avatarURL = getAvatarURL(user?.avatar, 36, avatarSeed);
+  const fallbackAvatarURL = getAvatarURL(null, 36, avatarSeed);
 
   return (
     <header className="admin-header">
@@ -46,14 +50,10 @@ const AdminHeader = ({ activeTab, onNavigateToSong }) => {
         {/* User info */}
         <div className="admin-header-user">
           <img
-            src={
-              user?.avatar
-                ? `http://localhost:5000${user.avatar}`
-                : `https://i.pravatar.cc/36?u=${user?._id}`
-            }
+            src={avatarURL}
             alt={user?.username}
             onError={(e) => {
-              e.target.src = `https://i.pravatar.cc/36?u=${user?._id}`;
+              e.currentTarget.src = fallbackAvatarURL;
             }}
           />
           <div className="admin-header-user-info">

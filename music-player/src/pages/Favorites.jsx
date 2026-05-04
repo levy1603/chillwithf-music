@@ -2,7 +2,7 @@
 import React, { useEffect, useState, useCallback } from "react";
 import SongList from "../components/SongList";
 import userAPI from "../api/userAPI";
-import "./Favorites.css";
+import "../styles/pages/Favorites.css";
 
 const Favorites = () => {
   const [favoriteSongs, setFavoriteSongs] = useState([]);

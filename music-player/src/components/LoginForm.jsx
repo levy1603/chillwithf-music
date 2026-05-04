@@ -15,7 +15,7 @@ import {
   FaWaveSquare,
 } from "react-icons/fa";
 import AuthLayout from "./AuthLayout";
-import "./Auth.css";
+import "../styles/components/Auth.css";
 
 const LoginForm = () => {
   const { login } = useAuth();

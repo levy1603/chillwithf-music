@@ -7,7 +7,7 @@ import {
   FaArrowLeft, FaFilter,
 } from "react-icons/fa";
 import { useNotifications } from "../context/NotificationContext";
-import "./NotificationsPage.css";
+import "../styles/pages/NotificationsPage.css";
 
 /* ══════════════════════════════════════════
    Config theo type

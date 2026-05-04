@@ -14,7 +14,8 @@ import {
   FaCloudUploadAlt,  
 } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
-import "./AdminSidebar.css";
+import getAvatarURL from "../../utils/getAvatarURL";
+import "../../styles/components/admin/AdminSidebar.css";
 
 const MENU_ITEMS = [
   { key: "stats",     label: "Dashboard",          icon: <FaChartBar />,        group: "main" },
@@ -35,6 +36,9 @@ const GROUPS = [
 const AdminSidebar = ({ collapsed, setCollapsed, activeTab, setActiveTab }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const avatarSeed = user?._id || user?.email || user?.username;
+  const avatarURL = getAvatarURL(user?.avatar, 32, avatarSeed);
+  const fallbackAvatarURL = getAvatarURL(null, 32, avatarSeed);
 
   return (
     <aside className={`admin-sidebar ${collapsed ? "collapsed" : ""}`}>
@@ -99,14 +103,10 @@ const AdminSidebar = ({ collapsed, setCollapsed, activeTab, setActiveTab }) => {
         {!collapsed && (
           <div className="admin-user-info">
             <img
-              src={
-                user?.avatar
-                  ? `http://localhost:5000${user.avatar}`
-                  : `https://i.pravatar.cc/32?u=${user?._id}`
-              }
+              src={avatarURL}
               alt={user?.username}
               onError={(e) => {
-                e.target.src = `https://i.pravatar.cc/32?u=${user?._id}`;
+                e.currentTarget.src = fallbackAvatarURL;
               }}
             />
             <div>

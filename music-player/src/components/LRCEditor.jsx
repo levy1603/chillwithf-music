@@ -27,7 +27,7 @@ import {
 } from "../utils/lrcParser";
 import ConfirmModal from "./common/ConfirmModal";
 import PasteLyricsModal from "./lrc/PasteLyricsModal";
-import "./LRCEditor.css";
+import "../styles/components/LRCEditor.css";
 
 /* ════════════════════════════════════════════════════════════
    HELPERS

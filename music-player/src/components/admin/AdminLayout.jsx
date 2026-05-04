@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import AdminSidebar from "./AdminSidebar";
 import AdminHeader  from "./AdminHeader";
-import "./AdminLayout.css";
+import "../../styles/components/admin/AdminLayout.css";
 
 const AdminLayout = ({
   children,

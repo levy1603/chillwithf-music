@@ -29,7 +29,7 @@ import {
 } from "../utils/dynamicFavicon";
 import useSleepTimer from "../hooks/useSleepTimer";
 import SleepTimerPanel from "./SleepTimerPanel";
-import "./MusicPlayer.css";
+import "../styles/components/MusicPlayer.css";
 
 const DEFAULT_COVER = "/images/default-cover.jpg";
 
