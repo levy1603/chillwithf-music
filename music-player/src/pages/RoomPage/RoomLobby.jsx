@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -52,6 +52,29 @@ const RoomLobby = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState("all"); // all | public | private
   const [searchTerm, setSearchTerm] = useState("");
+  const closingOrphanRoomIdsRef = useRef(new Set());
+
+  const hasValidHost = (room) => {
+    const hostId = room?.host?._id ?? room?.host;
+    return !!hostId;
+  };
+
+  const closeRoomWithoutHost = async (roomId) => {
+    if (!roomId || closingOrphanRoomIdsRef.current.has(roomId)) return;
+
+    closingOrphanRoomIdsRef.current.add(roomId);
+
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await fetch(`/api/rooms/${roomId}`, {
+        method: "DELETE",
+        headers,
+      });
+    } catch (err) {
+      console.error("Khong the dong phong khong co host:", err);
+    }
+  };
 
   useEffect(() => {
     fetchRooms();
@@ -62,7 +85,15 @@ const RoomLobby = () => {
       setLoading(true);
       const res = await fetch("/api/rooms");
       const data = await res.json();
-      setRooms(data.rooms || []);
+      const fetchedRooms = data.rooms || [];
+      const roomsWithoutHost = fetchedRooms.filter((room) => !hasValidHost(room));
+      const activeRooms = fetchedRooms.filter(hasValidHost);
+
+      setRooms(activeRooms);
+
+      if (roomsWithoutHost.length > 0) {
+        roomsWithoutHost.forEach((room) => closeRoomWithoutHost(room?._id));
+      }
     } catch (err) {
       console.error("Loi tai phong:", err);
     } finally {
@@ -85,6 +116,8 @@ const RoomLobby = () => {
   };
 
   const filteredRooms = rooms.filter((r) => {
+    if (!hasValidHost(r)) return false;
+
     const roomType = normalizeRoomType(r.type);
     const matchesFilter = filter === "all" || roomType === filter;
 

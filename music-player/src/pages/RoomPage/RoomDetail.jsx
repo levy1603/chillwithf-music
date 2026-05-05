@@ -16,6 +16,10 @@ import "./RoomPage.css";
 
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 const normalizeId = (id) => id?.toString?.() ?? "";
+const hasPlayableSource = (song) =>
+  !!(song?.audioUrl || song?.youtubeUrl || song?.videoFile);
+const getSongIdentity = (song) =>
+  normalizeId(song?.songId || song?._id || song?.audioUrl || song?.youtubeUrl || song?.videoFile);
 
 const getYoutubeVideoId = (url) => {
   if (!url || typeof url !== "string") return null;
@@ -56,6 +60,7 @@ const initialRoomState = {
   users: [],
   messages: [],
   queue: [],
+  previousSong: null,
   currentSong: null,
   playerState: { isPlaying: false, currentTime: 0, volume: 80 },
   isHost: false,
@@ -70,6 +75,7 @@ function roomReducer(state, action) {
         users: action.payload.users ?? [],
         messages: action.payload.messages ?? [],
         queue: action.payload.room?.queue ?? action.payload.queue ?? [],
+        previousSong: null,
         currentSong: action.payload.room?.currentSong ?? action.payload.currentSong ?? null,
         playerState: action.payload.playerState ?? state.playerState,
         isHost: normalizeId(action.payload.room?.host?._id) === action.payload.currentUserId,
@@ -96,12 +102,18 @@ function roomReducer(state, action) {
         ),
       };
 
-    case "SONG_CHANGED":
+    case "SONG_CHANGED": {
+      const incomingSong = action.payload.song;
+      const currentSongId = normalizeId(state.currentSong?.songId || state.currentSong?._id);
+      const incomingSongId = normalizeId(incomingSong?.songId || incomingSong?._id);
+      const isSameSong = !!currentSongId && currentSongId === incomingSongId;
       return {
         ...state,
-        currentSong: action.payload.song,
+        previousSong: isSameSong ? state.previousSong : (state.currentSong ?? state.previousSong),
+        currentSong: incomingSong,
         playerState: action.payload.playerState ?? state.playerState,
       };
+    }
 
     case "PLAYER_SYNC":
       return { ...state, playerState: action.payload };
@@ -122,6 +134,9 @@ function roomReducer(state, action) {
           : state.room,
       };
     }
+
+    case "CLEAR_PREVIOUS_SONG":
+      return { ...state, previousSong: null };
 
     default:
       return state;
@@ -280,6 +295,47 @@ const PasswordModal = React.memo(({
 ));
 PasswordModal.displayName = "PasswordModal";
 
+const ConfirmActionModal = React.memo(({
+  title, description, confirmText, cancelText, onConfirm, onCancel,
+}) => (
+  <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title">
+    <div className="modal-box join-room-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2 id="confirm-modal-title">{title}</h2>
+      </div>
+      <div className="create-room-form">
+        <p>{description}</p>
+        <div style={{ display: "flex", gap: 8 }}>
+          <button type="button" className="submit-btn" onClick={onConfirm}>
+            {confirmText}
+          </button>
+          <button type="button" className="submit-btn" onClick={onCancel}>
+            {cancelText}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+));
+ConfirmActionModal.displayName = "ConfirmActionModal";
+
+const NoticeModal = React.memo(({ title, message, buttonText, onClose }) => (
+  <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="notice-modal-title">
+    <div className="modal-box join-room-modal" onClick={(e) => e.stopPropagation()}>
+      <div className="modal-header">
+        <h2 id="notice-modal-title">{title}</h2>
+      </div>
+      <div className="create-room-form">
+        <p>{message}</p>
+        <button type="button" className="submit-btn" onClick={onClose}>
+          {buttonText}
+        </button>
+      </div>
+    </div>
+  </div>
+));
+NoticeModal.displayName = "NoticeModal";
+
 // ─── Custom hook: useRoomSocket ────────────────────────────────────────────────
 function useRoomSocket({ roomId, user, onKicked, onClosed }) {
   const socketRef = useRef(null);
@@ -335,7 +391,30 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
     const onKickedHandler = () => onKicked?.();
     const onClosedHandler = () => onClosed?.();
 
-    const onRoomError = ({ message = "" }) => {
+    const onRoomError = ({ code = "", message = "" } = {}) => {
+      const nonFatalCodes = new Set([
+        "QUEUE_EMPTY",
+        "HISTORY_EMPTY",
+        "NOT_HOST",
+        "NO_PERMISSION",
+        "INVALID_SONG",
+        "MSG_TOO_LONG",
+        "NOT_IN_ROOM",
+        "CANNOT_KICK_SELF",
+      ]);
+      if (nonFatalCodes.has(code)) {
+        if (code === "HISTORY_EMPTY") {
+          dispatch({ type: "CLEAR_PREVIOUS_SONG" });
+        }
+        if (code === "QUEUE_EMPTY") {
+          dispatch({ type: "QUEUE_UPDATED", payload: [] });
+        }
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[room:error]", code, message);
+        }
+        return;
+      }
+
       const lower = message.toLowerCase();
       const isPasswordIssue =
         lower.includes("password") ||
@@ -459,6 +538,12 @@ const RoomDetail = () => {
   const [miniMediaTabs, setMiniMediaTabs] = useState(new Set(["lyrics"]));
   const [roomPassword, setRoomPassword] = useState("");
   const [displayCurrentTime, setDisplayCurrentTime] = useState(0);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
+  const [roomNotice, setRoomNotice] = useState({
+    open: false,
+    title: "",
+    message: "",
+  });
 
   // Redirect nếu chưa đăng nhập
   useEffect(() => {
@@ -469,11 +554,23 @@ const RoomDetail = () => {
   const { socketRef, state, loading, error, passwordPrompt, submitPassword } = useRoomSocket({
     roomId,
     user,
-    onKicked: () => { alert("Bạn đã bị kick khỏi phòng"); navigate("/rooms"); },
-    onClosed: () => { alert("Phòng đã bị đóng bởi host"); navigate("/rooms"); },
+    onKicked: () => {
+      setRoomNotice({
+        open: true,
+        title: "Thông báo",
+        message: "Bạn đã bị kick khỏi phòng.",
+      });
+    },
+    onClosed: () => {
+      setRoomNotice({
+        open: true,
+        title: "Thông báo",
+        message: "Phòng đã bị đóng bởi host.",
+      });
+    },
   });
 
-  const { room, users, messages, queue, currentSong, playerState, isHost } = state;
+  const { room, users, messages, queue, previousSong, currentSong, playerState, isHost } = state;
 
   // Song detail
   const currentSongId = useMemo(
@@ -542,10 +639,36 @@ const RoomDetail = () => {
     [isHost, emit]
   );
 
+  const currentSongIdentity = useMemo(
+    () => getSongIdentity(currentSong),
+    [currentSong]
+  );
+  const hasNextSong = useMemo(
+    () => Array.isArray(queue) && queue.some((item) => {
+      if (!hasPlayableSource(item)) return false;
+      const itemIdentity = getSongIdentity(item);
+      if (!itemIdentity) return false;
+      if (!currentSongIdentity) return true;
+      return itemIdentity !== currentSongIdentity;
+    }),
+    [queue, currentSongIdentity]
+  );
+  const hasPreviousSong = useMemo(
+    () => hasPlayableSource(previousSong),
+    [previousSong]
+  );
+
   const handleNextSong = useCallback(() => {
     if (!isHost) return;
+    if (!hasNextSong) return;
     emit("room:next-song");
-  }, [isHost, emit]);
+  }, [isHost, hasNextSong, emit]);
+
+  const handlePrevSong = useCallback(() => {
+    if (!isHost) return;
+    if (!hasPreviousSong) return;
+    emit("room:prev-song");
+  }, [isHost, hasPreviousSong, emit]);
 
   const handleVolumeChange = useCallback(
     (volume) => { if (isHost) emit("room:volume-change", { volume }); },
@@ -609,7 +732,12 @@ const RoomDetail = () => {
 
   const handleCloseRoom = useCallback(async () => {
     if (!isHost) return;
-    if (!window.confirm("Đóng phòng ngay bây giờ? Tất cả thành viên sẽ bị thoát.")) return;
+    setShowCloseConfirm(true);
+  }, [isHost]);
+
+  const handleConfirmCloseRoom = useCallback(async () => {
+    if (!isHost) return;
+    setShowCloseConfirm(false);
 
     emit("room:close");
 
@@ -623,6 +751,11 @@ const RoomDetail = () => {
       console.error("Close room fallback failed:", err);
     }
   }, [isHost, emit, roomId]);
+
+  const handleRoomNoticeClose = useCallback(() => {
+    setRoomNotice({ open: false, title: "", message: "" });
+    navigate("/rooms");
+  }, [navigate]);
 
   // ── View toggle ───────────────────────────────────────────────────────────────
   const handleToggleSongView = useCallback(() => {
@@ -760,6 +893,9 @@ const RoomDetail = () => {
                 currentSong={currentSong}
                 playerState={playerState}
                 isHost={isHost}
+                canPrev={hasPreviousSong}
+                canNext={hasNextSong}
+                onPrev={handlePrevSong}
                 onPlayPause={handlePlayPause}
                 onSeek={handleSeek}
                 onNext={handleNextSong}
@@ -775,8 +911,8 @@ const RoomDetail = () => {
                   alt={activeSongForMedia?.title ?? "song cover"}
                 />
                 <div className="room-song-mini-meta">
-                  <strong>{activeSongForMedia?.title ?? "Chưa có bài đang phát"}</strong>
-                  <span>{activeSongForMedia?.artist ?? "Đang chờ bài hát..."}</span>
+                  <strong>{activeSongForMedia?.title ?? "Chưa có bài hát nào"}</strong>
+                  <span>{activeSongForMedia?.artist ?? "Hãy thêm bài hát vào hàng chờ"}</span>
                 </div>
                 {isHost && (
                   <button
@@ -919,6 +1055,26 @@ const RoomDetail = () => {
           onSubmit={handleSubmitPassword}
           error={passwordPrompt.error}
           isSubmitting={passwordPrompt.isSubmitting}
+        />
+      )}
+
+      {showCloseConfirm && (
+        <ConfirmActionModal
+          title="Đóng phòng"
+          description="Đóng phòng ngay bây giờ? Tất cả thành viên sẽ bị thoát."
+          confirmText="Đóng phòng"
+          cancelText="Hủy"
+          onConfirm={handleConfirmCloseRoom}
+          onCancel={() => setShowCloseConfirm(false)}
+        />
+      )}
+
+      {roomNotice.open && (
+        <NoticeModal
+          title={roomNotice.title}
+          message={roomNotice.message}
+          buttonText="Quay lại danh sách phòng"
+          onClose={handleRoomNoticeClose}
         />
       )}
     </div>

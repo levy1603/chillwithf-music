@@ -1,6 +1,6 @@
-// components/Sidebar.js
+﻿// components/Sidebar.js
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaHeart,
@@ -13,16 +13,13 @@ import {
   FaCompass,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
+import { useMusicContext } from "../context/MusicContext";
 import "../styles/components/Sidebar.css";
-
-const EXPLORE_ITEMS = [
-  { label: "Nhạc Việt Hot", icon: FaCompactDisc },
-  { label: "Chill & Relax", icon: FaCompactDisc },
-  { label: "Workout Mix", icon: FaCompactDisc },
-];
 
 const Sidebar = () => {
   const { isAuthenticated, user } = useAuth();
+  const { songs = [] } = useMusicContext();
+  const navigate = useNavigate();
 
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("sidebarCollapsed") === "true";
@@ -51,7 +48,7 @@ const Sidebar = () => {
     const links = [
       {
         to: "/",
-        label: "Trang chủ",
+        label: "Trang chu",
         icon: FaHome,
         end: true,
       },
@@ -61,17 +58,17 @@ const Sidebar = () => {
       links.push(
         {
           to: "/favorites",
-          label: "Yêu thích",
+          label: "Yeu thich",
           icon: FaHeart,
         },
         {
           to: "/playlist",
-          label: "Nhạc đã nghe",
+          label: "Nhac da nghe",
           icon: FaListUl,
         },
         {
           to: "/my-playlists",
-          label: "Các Playlist",
+          label: "Cac Playlist",
           icon: FaLayerGroup,
         }
       );
@@ -80,14 +77,78 @@ const Sidebar = () => {
     return links;
   }, [isAuthenticated]);
 
+  const exploreItems = useMemo(() => {
+    const safeSongs = Array.isArray(songs) ? songs : [];
+
+    const genreCounter = safeSongs.reduce((acc, song) => {
+      const rawGenre = song?.genre;
+      const normalizedGenre =
+        typeof rawGenre === "string" && rawGenre.trim()
+          ? rawGenre.trim()
+          : "Khac";
+      acc[normalizedGenre] = (acc[normalizedGenre] || 0) + 1;
+      return acc;
+    }, {});
+
+    const topGenreEntry = Object.entries(genreCounter).sort((a, b) => b[1] - a[1])[0];
+    const topGenreName = topGenreEntry?.[0] || "Khac";
+    const topGenreCount = topGenreEntry?.[1] || 0;
+
+    const topLikedSong = [...safeSongs].sort(
+      (a, b) => (b?.likeCount || 0) - (a?.likeCount || 0)
+    )[0];
+    const topLikedSongName = topLikedSong?.title || "Chua co du lieu";
+    const topLikedSongLikes = topLikedSong?.likeCount || 0;
+
+    const hotSong = [...safeSongs].sort((a, b) => {
+      const scoreA = (a?.playCount || 0) * 0.7 + (a?.likeCount || 0) * 0.3;
+      const scoreB = (b?.playCount || 0) * 0.7 + (b?.likeCount || 0) * 0.3;
+      return scoreB - scoreA;
+    })[0];
+    const hotSongName = hotSong?.title || "Chua co du lieu";
+    const hotSongPlays = hotSong?.playCount || 0;
+
+    return [
+      {
+        key: "top-genre",
+        label: "Top the loai bai",
+        icon: FaLayerGroup,
+        to: `/search?genre=${encodeURIComponent(topGenreName)}`,
+        title: `Top the loai: ${topGenreName} (${topGenreCount} bai)`,
+      },
+      {
+        key: "top-liked-song",
+        label: "Bai hat duoc yeu thich",
+        icon: FaHeart,
+        to: "/search?sort=likes",
+        title: `Bai duoc thich nhieu: ${topLikedSongName} (${topLikedSongLikes} luot thich)`,
+      },
+      {
+        key: "hot-songs",
+        label: "Nhac Hot",
+        icon: FaCompactDisc,
+        to: "/search?sort=popular",
+        title: `Bai hot hien tai: ${hotSongName} (${hotSongPlays} luot nghe)`,
+      },
+    ];
+  }, [songs]);
+
+  const handleExploreClick = useCallback(
+    (to) => {
+      if (!to) return;
+      navigate(to);
+    },
+    [navigate]
+  );
+
   return (
     <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
       <button
         type="button"
         className="sidebar-toggle-btn"
         onClick={handleToggle}
-        title={collapsed ? "Mở rộng" : "Thu gọn"}
-        aria-label={collapsed ? "Mở rộng sidebar" : "Thu gọn sidebar"}
+        title={collapsed ? "Mo rong" : "Thu gon"}
+        aria-label={collapsed ? "Mo rong sidebar" : "Thu gon sidebar"}
       >
         {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
       </button>
@@ -114,23 +175,24 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* KHÁM PHÁ */}
+        {/* KHAM PHA */}
         <div className="sidebar-playlists">
           {!collapsed && (
             <h3 className="sidebar-title sidebar-title-with-icon">
               <FaCompass />
-              <span>KHÁM PHÁ</span>
+              <span>KHAM PHA</span>
             </h3>
           )}
 
-          {EXPLORE_ITEMS.map((item) => {
+          {exploreItems.map((item) => {
             const Icon = item.icon;
             return (
               <button
                 type="button"
-                key={item.label}
+                key={item.key}
                 className="playlist-item"
-                title={item.label}
+                title={item.title || item.label}
+                onClick={() => handleExploreClick(item.to)}
               >
                 <Icon />
                 {!collapsed && <span>{item.label}</span>}
@@ -142,15 +204,15 @@ const Sidebar = () => {
         {/* ADMIN */}
         {isAuthenticated && user?.role === "admin" && (
           <div className="sidebar-admin">
-            {!collapsed && <h3 className="sidebar-title">QUẢN TRỊ</h3>}
+            {!collapsed && <h3 className="sidebar-title">QUAN TRI</h3>}
 
             <NavLink
               to="/admin"
               className="sidebar-link sidebar-link-admin"
-              title="Trang quản trị"
+              title="Trang quan tri"
             >
               <FaUserShield />
-              {!collapsed && <span>Quản trị</span>}
+              {!collapsed && <span>Quan tri</span>}
             </NavLink>
           </div>
         )}

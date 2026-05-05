@@ -1,7 +1,7 @@
 // src/pages/RoomPage/RoomPlayer.jsx
 import React, { useEffect, useRef, useState, useCallback } from "react";
 import {
-  FaPlay, FaPause, FaStepForward, FaVolumeUp,
+  FaPlay, FaPause, FaStepBackward, FaStepForward, FaVolumeUp,
   FaVolumeMute, FaCrown
 } from "react-icons/fa";
 import { MdMusicOff } from "react-icons/md";
@@ -42,6 +42,9 @@ const RoomPlayer = ({
   currentSong,
   playerState,
   isHost,
+  canPrev = false,
+  canNext = true,
+  onPrev,
   onPlayPause,
   onSeek,
   onNext,
@@ -57,12 +60,24 @@ const RoomPlayer = ({
   const [youtubeDuration, setYoutubeDuration] = useState(0);
   const lastSyncRef = useRef(null);
   const isSyncingRef = useRef(false);
+  const hasCurrentSong = Boolean(
+    currentSong &&
+    (
+      currentSong.songId ||
+      currentSong._id ||
+      (typeof currentSong.title === "string" && currentSong.title.trim()) ||
+      currentSong.audioUrl ||
+      currentSong.youtubeUrl ||
+      currentSong.videoFile
+    )
+  );
   const youtubeUrl = currentSong?.youtubeUrl || currentSong?.videoFile || null;
   const youtubeVideoId = getYoutubeVideoId(youtubeUrl);
   const isYoutubeSong = !!youtubeVideoId;
+  const shouldSpinCover = hasCurrentSong && Boolean(playerState?.isPlaying);
 
   useEffect(() => {
-    if (!isYoutubeSong) return;
+    if (!hasCurrentSong || !isYoutubeSong) return;
     const audio = audioRef.current;
     if (!audio) return;
     audio.pause();
@@ -72,7 +87,7 @@ const RoomPlayer = ({
 
   /* ── Đồng bộ bài hát khi currentSong thay đổi ── */
   useEffect(() => {
-    if (isYoutubeSong) return;
+    if (!hasCurrentSong || isYoutubeSong) return;
     const audio = audioRef.current;
     if (!audio || !currentSong?.audioUrl) return;
 
@@ -87,7 +102,7 @@ const RoomPlayer = ({
   /* ── Đồng bộ playerState từ server ── */
   useEffect(() => {
     const audio = audioRef.current;
-    if (!audio || isYoutubeSong) return;
+    if (!audio || !hasCurrentSong || isYoutubeSong) return;
 
     const { isPlaying, currentTime, volume, timestamp } = playerState || {};
 
@@ -127,7 +142,7 @@ const RoomPlayer = ({
 
   /* ── Cập nhật thanh progress mỗi giây ── */
   useEffect(() => {
-    if (isYoutubeSong) return;
+    if (!hasCurrentSong || isYoutubeSong) return;
     const audio = audioRef.current;
     if (!audio) return;
 
@@ -141,7 +156,7 @@ const RoomPlayer = ({
 
   /* ── Volume local ── */
   useEffect(() => {
-    if (isYoutubeSong) return;
+    if (!hasCurrentSong || isYoutubeSong) return;
     const audio = audioRef.current;
     if (!audio) return;
     audio.volume = isMuted ? 0 : localVolume / 100;
@@ -149,7 +164,7 @@ const RoomPlayer = ({
 
   // YouTube iframe API bootstrap
   useEffect(() => {
-    if (!isYoutubeSong) return;
+    if (!hasCurrentSong || !isYoutubeSong) return;
 
     if (!window.YT || !window.YT.Player) {
       const existing = document.getElementById("youtube-iframe-api");
@@ -164,7 +179,7 @@ const RoomPlayer = ({
 
   // Create/destroy YouTube player
   useEffect(() => {
-    if (!isYoutubeSong || !youtubeContainerRef.current) return;
+    if (!hasCurrentSong || !isYoutubeSong || !youtubeContainerRef.current) return;
 
     let destroyed = false;
     let poll;
@@ -222,7 +237,7 @@ const RoomPlayer = ({
 
   // Sync host state to youtube player
   useEffect(() => {
-    if (!isYoutubeSong || !ytPlayerRef.current) return;
+    if (!hasCurrentSong || !isYoutubeSong || !ytPlayerRef.current) return;
 
     const target = playerState?.currentTime || 0;
     const current = ytPlayerRef.current.getCurrentTime?.() || 0;
@@ -235,7 +250,7 @@ const RoomPlayer = ({
   }, [isYoutubeSong, playerState?.currentTime, playerState?.isPlaying]);
 
   useEffect(() => {
-    if (!isYoutubeSong || !ytPlayerRef.current) return;
+    if (!hasCurrentSong || !isYoutubeSong || !ytPlayerRef.current) return;
     ytPlayerRef.current.setVolume?.(isMuted ? 0 : localVolume);
   }, [isYoutubeSong, localVolume, isMuted]);
 
@@ -276,7 +291,7 @@ const RoomPlayer = ({
   const progressRatio = duration > 0 ? (displayTime / duration) * 100 : 0;
 
   /* ── Render: không có bài hát ── */
-  if (!currentSong) {
+  if (!hasCurrentSong) {
     return (
       <div className="rp-empty">
         <MdMusicOff size={64} />
@@ -300,7 +315,7 @@ const RoomPlayer = ({
         <img
           src={currentSong.thumbnail || "/images/default-cover.png"}
           alt={currentSong.title}
-          className={`rp-thumb ${playerState?.isPlaying ? "rp-thumb--spin" : ""}`}
+          className={`rp-thumb ${shouldSpinCover ? "rp-thumb--spin" : ""}`}
           onError={(e) => (e.currentTarget.src = "/images/default-cover.png")}
         />
         <div className="rp-thumb-glow" />
@@ -336,6 +351,16 @@ const RoomPlayer = ({
 
       {/* Controls */}
       <div className="rp-controls">
+        {/* Previous */}
+        <button
+          className={`rp-btn ${!isHost || !canPrev ? "rp-btn--disabled" : ""}`}
+          onClick={isHost && canPrev ? onPrev : undefined}
+          disabled={!isHost || !canPrev}
+          title="Bài trước"
+        >
+          <FaStepBackward />
+        </button>
+
         {/* Play / Pause */}
         <button
           className={`rp-btn rp-btn--play ${!isHost ? "rp-btn--disabled" : ""}`}
@@ -348,7 +373,8 @@ const RoomPlayer = ({
         {/* Next */}
         <button
           className={`rp-btn ${!isHost ? "rp-btn--disabled" : ""}`}
-          onClick={isHost ? onNext : undefined}
+          onClick={isHost && canNext ? onNext : undefined}
+          disabled={!isHost || !canNext}
           title="Bài tiếp theo"
         >
           <FaStepForward />
@@ -382,3 +408,4 @@ const RoomPlayer = ({
 };
 
 export default RoomPlayer;
+

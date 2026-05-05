@@ -2,16 +2,7 @@
 const Room = require("../models/Room");
 const RoomMessage = require("../models/RoomMessage");
 
-/* ============================================================
-   roomStates: Map lưu trạng thái realtime của từng phòng
-   Key: roomId (string)
-   Value: { playerState, syncTimestamp }
-   
-   Lý do dùng Map thay vì DB:
-   - Cần cập nhật liên tục (seek, progress)
-   - Không cần persist sau khi server restart
-   - DB sẽ được sync khi có sự kiện quan trọng
-============================================================ */
+
 const roomStates = new Map();
 
 /* ============================================================
@@ -62,6 +53,28 @@ const roomHandler = (io) => {
     const user = socket.user;
     const hasPlayableSource = (song) =>
       !!(song?.audioUrl || song?.youtubeUrl || song?.videoFile);
+    const getSongIdentity = (song) =>
+      song?.songId || song?._id || song?.audioUrl || song?.youtubeUrl || song?.videoFile || null;
+    const isSameSong = (a, b) => {
+      const aId = getSongIdentity(a);
+      const bId = getSongIdentity(b);
+      if (aId && bId) return aId.toString() === bId.toString();
+      return false;
+    };
+    const toQueueItemFromSong = (song, addedBy) => ({
+      songId: song.songId || song._id || null,
+      title: song.title || "Unknown",
+      artist: song.artist || "Unknown",
+      thumbnail: song.thumbnail || "",
+      duration: song.duration || 0,
+      audioUrl: song.audioUrl || "",
+      youtubeUrl: song.youtubeUrl || "",
+      videoFile: song.videoFile || song.youtubeUrl || "",
+      addedBy,
+      addedByName: "Host",
+    });
+    const removeSameSongFromQueue = (queue, song) =>
+      (Array.isArray(queue) ? queue : []).filter((item) => !isSameSong(item, song));
     logEvent("connect", { userId: user._id, username: user.username });
 
     /* ----------------------------------------------------------
@@ -131,6 +144,7 @@ const roomHandler = (io) => {
             volume: room.playerState?.volume || 80,
             duration: room.currentSong?.duration || 0,
             syncTimestamp: Date.now(),
+            history: [],
           });
         }
 
@@ -318,7 +332,7 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:change-song", async ({ roomId, song }) => {
       try {
-        const room = await Room.findById(roomId).select("host");
+        const room = await Room.findById(roomId).select("host currentSong");
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) {
@@ -349,6 +363,11 @@ const roomHandler = (io) => {
 
         // Reset state
         const state = roomStates.get(roomId) || {};
+        if (hasPlayableSource(room.currentSong) && !isSameSong(room.currentSong, newSong)) {
+          state.history = Array.isArray(state.history) ? state.history : [];
+          state.history.push(room.currentSong);
+          if (state.history.length > 30) state.history.shift();
+        }
         state.isPlaying = true;
         state.currentTime = 0;
         state.syncTimestamp = Date.now();
@@ -391,18 +410,26 @@ const roomHandler = (io) => {
         if (room.host.toString() !== user._id.toString()) return;
 
         if (!room.queue || room.queue.length === 0) {
-          return socket.emit("room:error", {
-            code: "QUEUE_EMPTY",
-            message: "Hàng chờ trống",
-          });
+          return;
         }
 
         // Lấy bài tiếp theo từ queue
         const nextSong = room.queue[0];
-        const newQueue = room.queue.slice(1);
+        let newQueue = room.queue.slice(1);
+
+        // Giữ lại bài cũ: đưa bài đang phát xuống cuối queue để có thể quay lại.
+        if (hasPlayableSource(room.currentSong)) {
+          newQueue = removeSameSongFromQueue(newQueue, room.currentSong);
+          newQueue.push(toQueueItemFromSong(room.currentSong, room.host));
+        }
 
         // Reset state
         const state = roomStates.get(roomId) || {};
+        if (hasPlayableSource(room.currentSong)) {
+          state.history = Array.isArray(state.history) ? state.history : [];
+          state.history.push(room.currentSong);
+          if (state.history.length > 30) state.history.shift();
+        }
         state.isPlaying = true;
         state.currentTime = 0;
         state.syncTimestamp = Date.now();
@@ -434,6 +461,65 @@ const roomHandler = (io) => {
         logEvent("room:next-song", { roomId, nextSong: nextSong.title });
       } catch (err) {
         console.error("[room:next-song]", err);
+      }
+    });
+
+    /* ----------------------------------------------------------
+       room:prev-song - Quay lại bài trước đó trong lịch sử (chỉ host)
+    ---------------------------------------------------------- */
+    socket.on("room:prev-song", async ({ roomId }) => {
+      try {
+        const room = await Room.findById(roomId).select("host queue currentSong");
+        if (!room) return;
+
+        if (room.host.toString() !== user._id.toString()) return;
+
+        const state = roomStates.get(roomId) || {};
+        const history = Array.isArray(state.history) ? state.history : [];
+
+        if (history.length === 0) {
+          return;
+        }
+
+        const previousSong = history.pop();
+        let newQueue = Array.isArray(room.queue) ? [...room.queue] : [];
+
+        // Giữ lại bài hiện tại để có thể next lại sau khi quay về bài trước.
+        if (hasPlayableSource(room.currentSong)) {
+          newQueue = removeSameSongFromQueue(newQueue, room.currentSong);
+          newQueue.unshift(toQueueItemFromSong(room.currentSong, room.host));
+        }
+
+        state.history = history;
+        state.isPlaying = true;
+        state.currentTime = 0;
+        state.syncTimestamp = Date.now();
+        state.duration = previousSong.duration || 0;
+        roomStates.set(roomId, state);
+
+        await Room.findByIdAndUpdate(roomId, {
+          currentSong: previousSong,
+          queue: newQueue,
+          "playerState.isPlaying": true,
+          "playerState.currentTime": 0,
+          "playerState.updatedAt": new Date(),
+        });
+
+        io.to(roomId).emit("room:song-changed", {
+          song: previousSong,
+          playerState: {
+            isPlaying: true,
+            currentTime: 0,
+            volume: state.volume,
+            timestamp: Date.now(),
+          },
+        });
+
+        io.to(roomId).emit("room:queue-updated", newQueue);
+
+        logEvent("room:prev-song", { roomId, previousSong: previousSong.title });
+      } catch (err) {
+        console.error("[room:prev-song]", err);
       }
     });
 
@@ -806,3 +892,4 @@ const handleLeaveRoom = async (socket, io, roomId, user) => {
 };
 
 module.exports = roomHandler;
+

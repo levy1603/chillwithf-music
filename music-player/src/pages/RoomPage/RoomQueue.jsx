@@ -65,10 +65,24 @@ const RoomQueue = ({
   const [youtubeError, setYoutubeError] = useState("");
   const searchTimeout = useRef(null);
   const latestSearchId = useRef(0);
+  const searchAbortRef = useRef(null);
+  const lastFetchedQueryRef = useRef("");
+  const hasCurrentSong = Boolean(
+    currentSong &&
+    (
+      currentSong.songId ||
+      currentSong._id ||
+      (typeof currentSong.title === "string" && currentSong.title.trim()) ||
+      currentSong.audioUrl ||
+      currentSong.youtubeUrl ||
+      currentSong.videoFile
+    )
+  );
 
   useEffect(() => {
     return () => {
       clearTimeout(searchTimeout.current);
+      searchAbortRef.current?.abort();
     };
   }, []);
 
@@ -76,27 +90,46 @@ const RoomQueue = ({
   const handleSearch = useCallback((query) => {
     setSearchQuery(query);
     clearTimeout(searchTimeout.current);
+    searchAbortRef.current?.abort();
+    searchAbortRef.current = null;
 
-    if (!query.trim()) {
+    const normalizedQuery = query.trim();
+
+    if (!normalizedQuery) {
       setSearchResults([]);
       setIsSearching(false);
+      lastFetchedQueryRef.current = "";
       return;
     }
 
     const searchId = ++latestSearchId.current;
     searchTimeout.current = setTimeout(async () => {
       try {
+        // Tránh gọi lại liên tục cùng 1 query (đặc biệt khi component re-render nhanh)
+        if (normalizedQuery === lastFetchedQueryRef.current) return;
+
         setIsSearching(true);
+        const controller = new AbortController();
+        searchAbortRef.current = controller;
         const token = localStorage.getItem("token");
+        if (!token) {
+          setSearchResults([]);
+          return;
+        }
         const res = await fetch(
-          `/api/songs?search=${encodeURIComponent(query)}&limit=10`,
-          { headers: { Authorization: `Bearer ${token}` } }
+          `/api/songs?search=${encodeURIComponent(normalizedQuery)}&limit=10`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal,
+          }
         );
         const data = await res.json();
         if (searchId === latestSearchId.current) {
+          lastFetchedQueryRef.current = normalizedQuery;
           setSearchResults(data.songs || data.data || []);
         }
       } catch (err) {
+        if (err?.name === "AbortError") return;
         console.error("Lỗi tìm kiếm:", err);
       } finally {
         if (searchId === latestSearchId.current) {
@@ -104,6 +137,23 @@ const RoomQueue = ({
         }
       }
     }, 400);
+  }, []);
+
+  const handleToggleSearch = useCallback(() => {
+    setShowSearch((prev) => {
+      const next = !prev;
+      if (!next) {
+        clearTimeout(searchTimeout.current);
+        searchAbortRef.current?.abort();
+        searchAbortRef.current = null;
+        setSearchQuery("");
+        setSearchResults([]);
+        setIsSearching(false);
+        setYoutubeError("");
+        lastFetchedQueryRef.current = "";
+      }
+      return next;
+    });
   }, []);
 
   const handleAddSong = useCallback(
@@ -240,7 +290,7 @@ const RoomQueue = ({
         <span className="rq-title">🎵 Hàng chờ ({queue.length})</span>
         <button
           className="rq-add-btn"
-          onClick={() => setShowSearch((p) => !p)}
+          onClick={handleToggleSearch}
           title="Thêm bài hát"
         >
           <FaPlus />
@@ -369,7 +419,7 @@ const RoomQueue = ({
       )}
 
       {/* ── Now playing ── */}
-      {currentSong && (
+      {hasCurrentSong && (
         <div className="rq-now-playing">
           <span className="rq-np-label">🎵 Đang phát</span>
           <div className="rq-np-item">
