@@ -6,9 +6,9 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 
-Music Project là một ứng dụng nghe nhạc full-stack, kết hợp giữa trải nghiệm phát nhạc cá nhân và phòng nghe nhạc realtime theo nhóm.
+Music Project là web nghe nhạc full-stack, kết hợp giữa trải nghiệm phát nhạc cá nhân và phòng nghe nhạc realtime theo nhóm.
 
-Hệ thống được xây dựng với React ở frontend và Node.js, Express, MongoDB, Socket.io ở backend. Ứng dụng hỗ trợ đăng nhập, quản lý bài hát, playlist, yêu thích, upload media, thông báo, trang admin, và đồng bộ phát nhạc trong phòng chat realtime.
+Hệ thống được xây dựng với React ở frontend và Node.js, Express, MongoDB, Socket.io ở backend. web hỗ trợ đăng nhập, quản lý bài hát, playlist, yêu thích, upload media, thông báo, trang admin, và đồng bộ phát nhạc trong phòng chat realtime.
 
 ## Tổng Quan
 
@@ -23,14 +23,14 @@ Frontend chịu trách nhiệm hiển thị giao diện, điều hướng, phát
 
 - Đăng ký, đăng nhập và quản lý phiên người dùng
 - Xem trang chủ, tìm kiếm bài hát và xem chi tiết bài hát
-- Thích / bỏ thích bài hát
+- Yêu thích bài hát
 - Tạo, cập nhật và quản lý playlist cá nhân
-- Upload bài hát với audio, ảnh bìa và video tùy chọn
-- Quản lý hồ sơ cá nhân và avatar
-- Nhận thông báo trong ứng dụng
+- Upload bài hát và đồng bộ lyric 
+- Quản lý hồ sơ cá nhân 
+- Nhận thông báo trực tiếp 
 - Trang admin để duyệt bài upload, quản lý người dùng và thống kê
-- Phòng nghe nhạc realtime với chat, hàng chờ, quyền host và đồng bộ player
-- Hiển thị lyric và video trong phòng nghe nhạc
+- Phòng nghe nhạc realtime 
+- Hiển thị lyric và video 
 
 ## Công Nghệ Sử Dụng
 
@@ -62,25 +62,6 @@ Music-Project/
   music-player/
   music-server/
 ```
-
-### `music-player`
-
-- `src/pages` - các trang chính của ứng dụng
-- `src/components` - component tái sử dụng
-- `src/context` - auth, music và notification context
-- `src/api` - lớp gọi API đến backend
-- `src/hooks` - custom hooks dùng chung
-- `src/styles` - style cho trang và component
-
-### `music-server`
-
-- `controllers` - xử lý logic cho từng route
-- `routes` - khai báo API endpoints
-- `models` - schema MongoDB
-- `middleware` - xác thực, upload và xử lý lỗi
-- `socket` - logic realtime cho phòng nghe nhạc
-- `config` - cấu hình database và Cloudinary
-- `jobs` - các tác vụ chạy nền
 
 ## Cài Đặt
 
@@ -158,34 +139,10 @@ Mặc định:
 
 Hiện tại dự án chưa có link triển khai công khai.
 
-Nếu bạn đã deploy sau này, hãy thêm các mục sau vào đây:
-
-- Frontend demo
-- Backend API
-- Socket.io endpoint
-
-Ví dụ:
-
-```text
-Frontend: https://your-frontend-domain.com
-Backend: https://your-backend-domain.com
-```
 
 ## Preview
 
-Ảnh minh họa hoặc GIF của giao diện có thể đặt ở đây để người xem nắm được sản phẩm nhanh hơn.
 
-Nếu bạn muốn dùng tài nguyên có sẵn trong repo, có thể tham chiếu tới:
-
-- `music-player/public/barbara-genshin-impact.gif`
-
-Ví dụ:
-
-```md
-![Music Project Preview](music-player/public/barbara-genshin-impact.gif)
-```
-
-Gợi ý: bạn nên thay GIF này bằng ảnh chụp màn hình thực tế của ứng dụng khi muốn README trông chuyên nghiệp hơn nữa.
 
 ## Các Khu Vực Chính Trong Ứng Dụng
 
@@ -251,30 +208,10 @@ Phần phòng nghe nhạc dùng Socket.io để đồng bộ trạng thái giữ
 - `room:closed`
 - `room:error`
 
-## Lưu Ý Khi Triển Khai
+## Lưu Ý Khi Triển Khai dự ấn 
 
 - Backend cần MongoDB và Cloudinary hoạt động trước khi khởi động.
 - Frontend dùng `proxy` tới `http://localhost:5000` trong môi trường phát triển.
 - Media upload được lưu qua Cloudinary và phục vụ qua backend theo luồng xử lý của ứng dụng.
-- Không nên commit secret thật trong file `.env`.
 
-## Scripts Có Sẵn
 
-### Frontend
-
-```bash
-npm start
-npm run build
-npm test
-```
-
-### Backend
-
-```bash
-npm run dev
-npm start
-```
-
-## License
-
-Dự án hiện chưa khai báo license.
