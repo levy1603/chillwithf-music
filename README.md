@@ -1,55 +1,86 @@
 # Music Project
 
-Music Project là một ứng dụng nghe nhạc full-stack được xây dựng với React, Node.js, Express, MongoDB và Socket.io.
+[![React](https://img.shields.io/badge/React-19.2.4-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Node.js-LTS-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-5.x-black?logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-8.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 
-Ứng dụng hỗ trợ phát nhạc, upload bài hát, quản lý playlist, yêu thích bài hát, thông báo, duyệt nội dung cho admin, và phòng nghe nhạc realtime với đồng bộ phát nhạc cùng chat.
+Music Project là một ứng dụng nghe nhạc full-stack, kết hợp giữa trải nghiệm phát nhạc cá nhân và phòng nghe nhạc realtime theo nhóm.
 
-## Tính Năng
+Hệ thống được xây dựng với React ở frontend và Node.js, Express, MongoDB, Socket.io ở backend. Ứng dụng hỗ trợ đăng nhập, quản lý bài hát, playlist, yêu thích, upload media, thông báo, trang admin, và đồng bộ phát nhạc trong phòng chat realtime.
 
-- Đăng ký, đăng nhập, xem và cập nhật hồ sơ cá nhân
-- Đổi mật khẩu
-- Xem danh sách bài hát, tìm kiếm và xem chi tiết bài hát
+## Tổng Quan
+
+Ứng dụng này được tách thành 2 phần:
+
+- `music-player` - frontend React
+- `music-server` - backend Express + MongoDB
+
+Frontend chịu trách nhiệm hiển thị giao diện, điều hướng, phát nhạc và tương tác người dùng. Backend cung cấp API, xử lý xác thực, quản lý dữ liệu, lưu trữ media và đồng bộ realtime qua Socket.io.
+
+## Tính Năng Nổi Bật
+
+- Đăng ký, đăng nhập và quản lý phiên người dùng
+- Xem trang chủ, tìm kiếm bài hát và xem chi tiết bài hát
 - Thích / bỏ thích bài hát
-- Tạo và quản lý playlist cá nhân
-- Upload bài hát với file audio, ảnh bìa và video tùy chọn
-- Xem thông báo người dùng
-- Trang admin để duyệt bài upload và quản lý người dùng
+- Tạo, cập nhật và quản lý playlist cá nhân
+- Upload bài hát với audio, ảnh bìa và video tùy chọn
+- Quản lý hồ sơ cá nhân và avatar
+- Nhận thông báo trong ứng dụng
+- Trang admin để duyệt bài upload, quản lý người dùng và thống kê
 - Phòng nghe nhạc realtime với chat, hàng chờ, quyền host và đồng bộ player
 - Hiển thị lyric và video trong phòng nghe nhạc
 
 ## Công Nghệ Sử Dụng
 
-- Frontend: React 19, React Router, Axios, Socket.io Client, Recharts
-- Backend: Node.js, Express 5, MongoDB, Mongoose, Socket.io
-- Xác thực: JWT, bcryptjs
-- Upload: Multer, Cloudinary
+### Frontend
+
+- React 19
+- React Router
+- Axios
+- Socket.io Client
+- Recharts
+- React Icons
+
+### Backend
+
+- Node.js
+- Express 5
+- MongoDB
+- Mongoose
+- Socket.io
+- JWT
+- bcryptjs
+- Multer
+- Cloudinary
 
 ## Cấu Trúc Dự Án
 
 ```text
 Music-Project/
-  music-player/   # Frontend React
-  music-server/   # Backend Express + MongoDB
+  music-player/
+  music-server/
 ```
 
-### Thư Mục Frontend
+### `music-player`
 
-- `src/pages` - các trang chính
+- `src/pages` - các trang chính của ứng dụng
 - `src/components` - component tái sử dụng
-- `src/context` - state cho auth, music, notification
-- `src/api` - các lớp gọi API
-- `src/hooks` - custom hooks
+- `src/context` - auth, music và notification context
+- `src/api` - lớp gọi API đến backend
+- `src/hooks` - custom hooks dùng chung
 - `src/styles` - style cho trang và component
 
-### Thư Mục Backend
+### `music-server`
 
-- `controllers` - xử lý request
-- `routes` - định nghĩa API routes
-- `models` - mô hình MongoDB
-- `middleware` - middleware xác thực và upload
-- `socket` - logic Socket.io cho room
+- `controllers` - xử lý logic cho từng route
+- `routes` - khai báo API endpoints
+- `models` - schema MongoDB
+- `middleware` - xác thực, upload và xử lý lỗi
+- `socket` - logic realtime cho phòng nghe nhạc
 - `config` - cấu hình database và Cloudinary
-- `jobs` - tác vụ chạy nền
+- `jobs` - các tác vụ chạy nền
 
 ## Cài Đặt
 
@@ -80,7 +111,7 @@ npm install
 
 ### Backend
 
-Tạo file `music-server/.env` với nội dung:
+Tạo file `music-server/.env` với nội dung mẫu:
 
 ```env
 PORT=5000
@@ -95,34 +126,70 @@ CLOUDINARY_API_SECRET=your_api_secret
 
 ### Frontend
 
-Frontend có thể chạy với giá trị mặc định trong code, nhưng bạn có thể override bằng:
+Frontend có thể chạy với cấu hình mặc định trong code. Nếu muốn override, tạo file `.env` trong `music-player`:
 
 ```env
 REACT_APP_API_URL=http://localhost:5000
 REACT_APP_SOCKET_URL=http://localhost:5000
 ```
 
-## Chạy Dự Án
+## Chạy Ứng Dụng
 
-Khởi động backend trước:
+Chạy backend trước:
 
 ```bash
 cd music-server
 npm run dev
 ```
 
-Mở một terminal khác và chạy frontend:
+Mở terminal khác và chạy frontend:
 
 ```bash
 cd music-player
 npm start
 ```
 
-Mặc định frontend chạy tại `http://localhost:3000` và backend chạy tại `http://localhost:5000`.
+Mặc định:
 
-## Các Trang Chính
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:5000`
 
-- Home
+## Demo
+
+Hiện tại dự án chưa có link triển khai công khai.
+
+Nếu bạn đã deploy sau này, hãy thêm các mục sau vào đây:
+
+- Frontend demo
+- Backend API
+- Socket.io endpoint
+
+Ví dụ:
+
+```text
+Frontend: https://your-frontend-domain.com
+Backend: https://your-backend-domain.com
+```
+
+## Preview
+
+Ảnh minh họa hoặc GIF của giao diện có thể đặt ở đây để người xem nắm được sản phẩm nhanh hơn.
+
+Nếu bạn muốn dùng tài nguyên có sẵn trong repo, có thể tham chiếu tới:
+
+- `music-player/public/barbara-genshin-impact.gif`
+
+Ví dụ:
+
+```md
+![Music Project Preview](music-player/public/barbara-genshin-impact.gif)
+```
+
+Gợi ý: bạn nên thay GIF này bằng ảnh chụp màn hình thực tế của ứng dụng khi muốn README trông chuyên nghiệp hơn nữa.
+
+## Các Khu Vực Chính Trong Ứng Dụng
+
+- Trang chủ
 - Chi tiết bài hát
 - Kết quả tìm kiếm
 - Favorites
@@ -132,26 +199,27 @@ Mặc định frontend chạy tại `http://localhost:3000` và backend chạy t
 - Profile
 - Notifications
 - Admin dashboard
-- Rooms lobby và room detail
+- Rooms lobby
+- Room detail
 
 ## Tổng Quan API
 
-Backend cung cấp các nhóm route chính:
+Backend cung cấp các nhóm API chính sau:
 
-- `GET /` - endpoint kiểm tra trạng thái / thông tin server
-- `/api/auth` - đăng ký, đăng nhập, lấy thông tin user, đổi mật khẩu
-- `/api/songs` - xem bài hát, upload, cập nhật, thích bài, duyệt bài cho admin
+- `GET /` - thông tin trạng thái server
+- `/api/auth` - đăng ký, đăng nhập, lấy thông tin tài khoản, đổi mật khẩu
+- `/api/songs` - xem, upload, cập nhật, thích bài hát và duyệt bài cho admin
 - `/api/playlists` - CRUD playlist và quản lý bài hát trong playlist
-- `/api/users` - hồ sơ cá nhân, favorites, công cụ admin cho user
-- `/api/notifications` - danh sách thông báo và đánh dấu đã đọc
+- `/api/users` - hồ sơ cá nhân, favorites và công cụ admin cho user
+- `/api/notifications` - danh sách thông báo và thao tác đánh dấu đã đọc
 - `/api/trash` - khôi phục và xóa vĩnh viễn
-- `/api/rooms` - danh sách phòng, tạo phòng, xác thực mật khẩu, tin nhắn
+- `/api/rooms` - danh sách phòng, tạo phòng, xác thực mật khẩu và tải tin nhắn
 
-## Tính Năng Realtime
+## Realtime Với Socket.io
 
-Socket.io được dùng cho phòng nghe nhạc và đồng bộ trạng thái phát nhạc.
+Phần phòng nghe nhạc dùng Socket.io để đồng bộ trạng thái giữa các thành viên trong phòng.
 
-Các event phổ biến:
+### Event client gửi lên server
 
 - `room:join`
 - `room:leave`
@@ -169,7 +237,7 @@ Các event phổ biến:
 - `room:close`
 - `room:request-sync`
 
-Các event server broadcast:
+### Event server broadcast
 
 - `room:init`
 - `room:user-joined`
@@ -183,12 +251,12 @@ Các event server broadcast:
 - `room:closed`
 - `room:error`
 
-## Lưu Ý
+## Lưu Ý Khi Triển Khai
 
-- Frontend dùng proxy tới `http://localhost:5000` trong môi trường phát triển.
-- Media upload được lưu qua Cloudinary và được backend phục vụ khi cần.
-- Không commit secret thật trong file `.env`.
-- Backend cần MongoDB và Cloudinary hoạt động trước khi chạy.
+- Backend cần MongoDB và Cloudinary hoạt động trước khi khởi động.
+- Frontend dùng `proxy` tới `http://localhost:5000` trong môi trường phát triển.
+- Media upload được lưu qua Cloudinary và phục vụ qua backend theo luồng xử lý của ứng dụng.
+- Không nên commit secret thật trong file `.env`.
 
 ## Scripts Có Sẵn
 
