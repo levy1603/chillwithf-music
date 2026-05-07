@@ -10,10 +10,10 @@ import SearchBar from "../SearchBar";
 import NotificationBell from "./NotificationBell";
 import "./Header.css";
 import getAvatarURL, { DEFAULT_AVATAR_URL } from "../../utils/getAvatarURL";
-import logoImg from "../../assets/barbara-genshin-impact.gif";
 import { MdMeetingRoom } from "react-icons/md";
 
 const DEFAULT_AVATAR = DEFAULT_AVATAR_URL;
+const LOGO_ICON_URL = `${process.env.PUBLIC_URL || ""}/music-icon.svg`;
 
 const Header = () => {
   const { user, isAuthenticated, logout } = useAuth();
@@ -77,7 +77,7 @@ const Header = () => {
       <div className="header-left">
         <Link to="/" className="header-logo">
           <div className="logo-icon-wrapper">
-            <img src={logoImg} alt="ChillWithF Logo" className="logo-icon" />
+            <img src={LOGO_ICON_URL} alt="ChillWithF Logo" className="logo-icon" />
             <span className="logo-wave-3" />
             <span className="logo-wave-4" />
             <span className="logo-wave-5" />

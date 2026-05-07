@@ -22,7 +22,7 @@ const getOnlineUsersInRoom = async (io, roomId) => {
   return uniqueUsers;
 };
 
-// Lấy state hiện tại của phòng (có tính đến thời gian trôi qua)
+// Lấy state hiện tại của phòng
 const getCurrentPlayerTime = (roomId) => {
   const state = roomStates.get(roomId);
   if (!state || !state.isPlaying) {
@@ -417,7 +417,7 @@ const roomHandler = (io) => {
         const nextSong = room.queue[0];
         let newQueue = room.queue.slice(1);
 
-        // Giữ lại bài cũ: đưa bài đang phát xuống cuối queue để có thể quay lại.
+        // Giữ lại bài cũ
         if (hasPlayableSource(room.currentSong)) {
           newQueue = removeSameSongFromQueue(newQueue, room.currentSong);
           newQueue.push(toQueueItemFromSong(room.currentSong, room.host));
@@ -484,7 +484,6 @@ const roomHandler = (io) => {
         const previousSong = history.pop();
         let newQueue = Array.isArray(room.queue) ? [...room.queue] : [];
 
-        // Giữ lại bài hiện tại để có thể next lại sau khi quay về bài trước.
         if (hasPlayableSource(room.currentSong)) {
           newQueue = removeSameSongFromQueue(newQueue, room.currentSong);
           newQueue.unshift(toQueueItemFromSong(room.currentSong, room.host));
@@ -840,8 +839,6 @@ const handleLeaveRoom = async (socket, io, roomId, user) => {
     if (onlineUsers.length === 0) {
       // Phòng trống: xóa state khỏi memory
       roomStates.delete(roomId);
-
-      // Xóa luôn phòng nếu muốn (optional)
       // await Room.findByIdAndUpdate(roomId, { isActive: false });
       logEvent("room:empty", { roomId });
     } else {

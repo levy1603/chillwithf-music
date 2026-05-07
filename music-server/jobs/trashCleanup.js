@@ -42,11 +42,8 @@ const runCleanup = async () => {
 };
 
 const startCleanupJob = () => {
-  // Chạy ngay lần đầu khi server start
   runCleanup();
-
-  // ✅ Dùng setInterval - chạy mỗi 24 giờ, không cần node-cron
-  const INTERVAL = 24 * 60 * 60 * 1000; // 24 giờ
+  const INTERVAL = 24 * 60 * 60 * 1000; 
   setInterval(runCleanup, INTERVAL);
 
   console.log("[Cleanup] ✅ Job started (runs every 24 hours)");

@@ -7,28 +7,20 @@ const dotenv  = require("dotenv");
 const http    = require("http");
 const { Server } = require("socket.io");
 
-// ===== KIỂM TRA .ENV =====
 const result = dotenv.config();
 if (result.error)           process.exit(1);
 if (!process.env.MONGO_URI) process.exit(1);
 
-// ===== KẾT NỐI DATABASE =====
 const connectDB = require("./config/db");
 
 const startServer = async () => {
   try {
     await connectDB();
-
-    // ✅ Khởi động cleanup job SAU KHI connect DB thành công
     const { startCleanupJob } = require("./jobs/trashCleanup");
     startCleanupJob();
 
     const app = express();
-
-    // ===== TẠO HTTP SERVER (bọc express để dùng với socket.io) =====
     const httpServer = http.createServer(app);
-
-    // ===== SOCKET.IO SETUP =====
     const io = new Server(httpServer, {
       cors: {
         origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -39,15 +31,12 @@ const startServer = async () => {
       pingInterval: 25000,
     });
 
-    // Middleware xác thực socket
     const socketAuthMiddleware = require("./socket/socketMiddleware");
     io.use(socketAuthMiddleware);
 
-    // Gắn room handler
     const roomHandler = require("./socket/roomHandler");
     roomHandler(io);
 
-    // ===== MIDDLEWARE =====
     app.use(cors({
       origin: process.env.CLIENT_URL || "http://localhost:3000",
       credentials: true,
@@ -55,7 +44,6 @@ const startServer = async () => {
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
-    // ===== TẠO THƯ MỤC UPLOADS =====
     const dirs = [
       "uploads/songs",
       "uploads/covers",
@@ -113,9 +101,7 @@ const startServer = async () => {
     app.use("/api/users",         require("./routes/userRoutes"));
     app.use("/api/notifications", require("./routes/notificationRoutes"));
     app.use("/api/trash",         require("./routes/trashRoutes"));
-    app.use("/api/rooms",         require("./routes/roomRoutes")); // ✅ Room routes
-
-    // ===== ROUTE GỐC =====
+    app.use("/api/rooms",         require("./routes/roomRoutes")); 
     app.get("/", (req, res) => {
       res.json({
         message: "🎵 MusicVN API đang hoạt động!",
@@ -126,17 +112,13 @@ const startServer = async () => {
           users:         "/api/users",
           notifications: "/api/notifications",
           trash:         "/api/trash",
-          rooms:         "/api/rooms", // ✅ thêm vào docs
+          rooms:         "/api/rooms",
         },
       });
     });
 
-    // ===== ERROR HANDLER =====
     const errorHandler = require("./middleware/errorHandler");
     app.use(errorHandler);
-
-    // ===== START SERVER =====
-    // ⚠️ Dùng httpServer.listen thay vì app.listen
     const PORT = process.env.PORT || 5000;
     httpServer.listen(PORT, () => {
       console.log(`✅ Server running on port ${PORT}`);

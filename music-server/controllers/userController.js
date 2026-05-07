@@ -80,10 +80,7 @@ const updateAvatar = async (req, res, next) => {
       });
     }
 
-    // ✅ Lấy URL từ Cloudinary (multer-storage-cloudinary lưu vào file.path)
     const newAvatarUrl = req.file.path;
-
-    // ✅ Xóa avatar cũ trên Cloudinary nếu có
     const currentUser = await User.findById(req.user._id);
 
     if (currentUser.avatar) {
@@ -91,10 +88,8 @@ const updateAvatar = async (req, res, next) => {
       const isLocalUrl      = currentUser.avatar.startsWith("/uploads/avatars/");
 
       if (isCloudinaryUrl) {
-        // Xóa avatar cũ trên Cloudinary
         await deleteFromCloudinary(currentUser.avatar, "image");
       } else if (isLocalUrl) {
-        // ✅ Tương thích ngược: Xóa file local cũ nếu còn tồn tại
         const path = require("path");
         const fs   = require("fs");
         const oldPath = path.join(__dirname, "..", currentUser.avatar);
@@ -105,7 +100,6 @@ const updateAvatar = async (req, res, next) => {
       }
     }
 
-    // ✅ Lưu URL Cloudinary vào DB
     const updatedUser = await User.findByIdAndUpdate(
       req.user._id,
       { avatar: newAvatarUrl },
@@ -171,12 +165,10 @@ const deleteUser = async (req, res, next) => {
       });
     }
 
-    // ✅ Xóa avatar trên Cloudinary nếu có
     if (user.avatar) {
       if (user.avatar.includes("cloudinary.com")) {
         await deleteFromCloudinary(user.avatar, "image");
       } else if (user.avatar.startsWith("/uploads/avatars/")) {
-        // Tương thích ngược với avatar local cũ
         const path = require("path");
         const fs   = require("fs");
         const oldPath = path.join(__dirname, "..", user.avatar);
@@ -184,7 +176,6 @@ const deleteUser = async (req, res, next) => {
       }
     }
 
-    // ✅ Xóa song files trên Cloudinary
     const userSongs = await Song.find({ uploadedBy: req.params.id });
     const { deleteSongFromCloudinary } = require("../config/cloudinary");
 
@@ -192,7 +183,6 @@ const deleteUser = async (req, res, next) => {
       userSongs.map((song) => deleteSongFromCloudinary(song))
     );
 
-    // ✅ Xóa tất cả dữ liệu liên quan song song
     await Promise.all([
       Song.deleteMany({ uploadedBy: req.params.id }),
       Playlist.deleteMany({ owner: req.params.id }),
@@ -385,7 +375,6 @@ const getMonthlyStats = async () => {
     })
   );
 
-  // Trả về đúng thứ tự tháng cũ → mới
   return months.reverse();
 };
 

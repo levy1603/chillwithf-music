@@ -19,7 +19,7 @@ const roomSchema = new mongoose.Schema(
     password: {
       type: String,
       default: null,
-      select: false, // không trả về password khi query
+      select: false, 
     },
 
     host: {

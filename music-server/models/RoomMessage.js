@@ -15,7 +15,6 @@ const roomMessageSchema = new mongoose.Schema(
       required: true,
     },
 
-    // Cache lại thông tin user để hiển thị nhanh
     username: String,
     avatar: String,
 
@@ -28,7 +27,7 @@ const roomMessageSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["text", "system"], // system: thông báo join/leave
+      enum: ["text", "system"], 
       default: "text",
     },
   },
@@ -37,7 +36,6 @@ const roomMessageSchema = new mongoose.Schema(
   }
 );
 
-// Tự xóa message sau 24h để tránh đầy DB
 roomMessageSchema.index(
   { createdAt: 1 },
   { expireAfterSeconds: 86400 }

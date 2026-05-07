@@ -11,17 +11,16 @@ const playHistorySchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref:  "User",
-      default: null, // Khách vãng lai không cần login
+      default: null, 
     },
     playedAt: {
       type:    Date,
-      default: Date.now, // ← Thời điểm nghe thực tế
+      default: Date.now, 
     },
   },
   { timestamps: false }
 );
 
-// Index để query nhanh
 playHistorySchema.index({ playedAt: -1 });
 playHistorySchema.index({ song: 1, playedAt: -1 });
 playHistorySchema.index({ user: 1, playedAt: -1 });

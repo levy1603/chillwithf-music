@@ -44,7 +44,6 @@ export const generateLRC = (lines) => {
     .join("\n");
 };
 
-// ✅ Export cả 2 tên để tương thích
 export const formatTime = (seconds) => {
   if (isNaN(seconds) || seconds < 0) return "00:00.00";
   const m  = Math.floor(seconds / 60);
@@ -53,7 +52,6 @@ export const formatTime = (seconds) => {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}.${String(ms).padStart(2, "0")}`;
 };
 
-// ✅ Alias để LRCEditor.js dùng formatLRCTime không bị lỗi
 export const formatLRCTime = formatTime;
 
 export const getCurrentLineIndex = (lines, currentTime) => {

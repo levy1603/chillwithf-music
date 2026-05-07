@@ -35,7 +35,6 @@ const userSchema = new mongoose.Schema(
       default: "",
     },
 
-    // ✅ THÊM MỚI
     nickname: {
       type: String,
       trim: true,

@@ -12,8 +12,7 @@ const songTrashSchema = new mongoose.Schema(
       ref      : "User",
       required : true,
     },
-    // ✅ Snapshot toàn bộ data song lúc xóa
-    // (để hiển thị trong trash kể cả khi song gốc bị xử lý)
+
     songData: {
       title      : { type: String },
       artist     : { type: String },
@@ -23,13 +22,13 @@ const songTrashSchema = new mongoose.Schema(
       coverImage : { type: String },
       duration   : { type: Number, default: 0 },
       playCount  : { type: Number, default: 0 },
-      status     : { type: String }, // lưu status lúc xóa để restore đúng
+      status     : { type: String },
     },
     deletedAt: {
       type    : Date,
       default : Date.now,
     },
-    // ✅ TTL Index: MongoDB tự xóa document sau 7 ngày
+
     expiresAt: {
       type    : Date,
       default : () => new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
@@ -38,8 +37,6 @@ const songTrashSchema = new mongoose.Schema(
   { timestamps: false }
 );
 
-// ✅ TTL - tự xóa document khi đến expiresAt
-// Lưu ý: chỉ xóa document MongoDB, file vật lý cần cron job riêng
 songTrashSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
 songTrashSchema.index({ userId: 1, deletedAt: -1 });
 

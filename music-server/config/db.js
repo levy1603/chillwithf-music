@@ -6,13 +6,13 @@ const connectDB = async () => {
     console.log("🔄 Đang kết nối MongoDB Atlas...");
 
     const conn = await mongoose.connect(process.env.MONGO_URI, {
-      serverSelectionTimeoutMS: 10000, // Timeout 10 giây
+      serverSelectionTimeoutMS: 10000, 
     });
 
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error(`❌ MongoDB Error: ${error.message}`);
-    throw error; // Ném lỗi lên server.js xử lý
+    throw error; 
   }
 };
 

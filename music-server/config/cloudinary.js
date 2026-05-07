@@ -41,7 +41,7 @@ const videoStorage = new CloudinaryStorage({
   }),
 });
 
-/* ── Avatar ── ✅ THÊM MỚI */
+/* ── Avatar ── */
 const avatarStorage = new CloudinaryStorage({
   cloudinary,
   params: () => ({
@@ -49,16 +49,14 @@ const avatarStorage = new CloudinaryStorage({
     resource_type: "image",
     public_id:     `avatar-${Date.now()}-${Math.random().toString(36).slice(2)}`,
     transformation: [
-      // Giữ nguyên framing gốc để avatar sau khi lưu không bị đổi bố cục
       { width: 800, height: 800, crop: "limit", quality: "auto" },
     ],
   }),
 });
 
-/* ── Xóa file trên Cloudinary bằng URL ── */
 const deleteFromCloudinary = async (url, type = "image") => {
   if (!url || url === "default-cover.jpg") return;
-  if (!url.includes("cloudinary.com"))     return; // Bỏ qua URL không phải Cloudinary
+  if (!url.includes("cloudinary.com"))     return; 
 
   try {
     const parts       = url.split("/");
@@ -67,8 +65,8 @@ const deleteFromCloudinary = async (url, type = "image") => {
 
     const withVersion = parts.slice(uploadIndex + 1).join("/");
     const publicId    = withVersion
-      .replace(/^v\d+\//, "")   // Bỏ version
-      .replace(/\.[^/.]+$/, ""); // Bỏ extension
+      .replace(/^v\d+\//, "")   
+      .replace(/\.[^/.]+$/, ""); 
 
     await cloudinary.uploader.destroy(publicId, { resource_type: type });
     console.log(`🗑️  Đã xóa Cloudinary: ${publicId}`);
@@ -77,7 +75,6 @@ const deleteFromCloudinary = async (url, type = "image") => {
   }
 };
 
-/* ── Xóa toàn bộ file của 1 bài hát ── */
 const deleteSongFromCloudinary = async (song) => {
   await Promise.allSettled([
     deleteFromCloudinary(song.audioFile,  "video"),
@@ -91,7 +88,7 @@ module.exports = {
   audioStorage,
   coverStorage,
   videoStorage,
-  avatarStorage,           // ✅ Export thêm
+  avatarStorage,          
   deleteFromCloudinary,
   deleteSongFromCloudinary,
 };

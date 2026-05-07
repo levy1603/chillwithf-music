@@ -16,10 +16,10 @@ const notificationSchema = new mongoose.Schema(
     type: {
       type: String,
       enum: [
-        "new_upload",      // User upload bài mới
-        "song_approved",   // Admin duyệt bài
-        "song_rejected",   // Admin từ chối bài
-        "system",          // Thông báo hệ thống
+        "new_upload",      
+        "song_approved",  
+        "song_rejected",  
+        "system",          
       ],
       required: true,
     },
@@ -33,12 +33,11 @@ const notificationSchema = new mongoose.Schema(
       rejectReason: String,
     },
     isRead:   { type: Boolean, default: false },
-    isHidden: { type: Boolean, default: false }, // Xóa mềm
+    isHidden: { type: Boolean, default: false }, 
   },
   { timestamps: true }
 );
 
-// Index để query nhanh
 notificationSchema.index({ recipient: 1, createdAt: -1 });
 notificationSchema.index({ recipient: 1, isRead: 1 });
 

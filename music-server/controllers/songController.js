@@ -4,7 +4,7 @@ const User                    = require("../models/User");
 const Playlist                = require("../models/Playlist");
 const mm                      = require("music-metadata");
 const path                    = require("path");
-const axios                   = require("axios"); // npm install axios
+const axios                   = require("axios"); 
 const notificationService     = require("../services/notificationService");
 const PlayHistory             = require("../models/PlayHistory");
 const { deleteSongFromCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
@@ -20,7 +20,7 @@ const getAudioDuration = async (audioUrl) => {
     // Download một phần nhỏ để đọc metadata
     const response = await axios.get(audioUrl, {
       responseType: "arraybuffer",
-      headers:      { Range: "bytes=0-1048576" }, // Chỉ lấy 1MB đầu
+      headers:      { Range: "bytes=0-1048576" },
       timeout:      10000,
     });
 
@@ -48,7 +48,6 @@ const parseTags = (rawTags) => {
 /* ── Lấy URL từ file được upload bởi Cloudinary ── */
 const getFileUrl = (file) => {
   if (!file) return null;
-  // multer-storage-cloudinary lưu URL vào file.path
   return file.path || null;
 };
 
@@ -177,7 +176,6 @@ const getSongFilterOptions = async (req, res, next) => {
    USER: Upload bài hát
 ═══════════════════════════════════════════ */
 const createSong = async (req, res, next) => {
-  // Track URLs đã upload để rollback nếu DB lỗi
   const uploadedUrls = { audio: null, cover: null, video: null };
 
   try {
@@ -228,9 +226,9 @@ const createSong = async (req, res, next) => {
       lyrics:      lyrics      || "",
       lrc:         lrc         || "",
       duration,
-      audioFile,   // ← Giờ là URL Cloudinary
-      coverImage,  // ← Giờ là URL Cloudinary
-      videoFile,   // ← Giờ là URL Cloudinary
+      audioFile,   
+      coverImage,  
+      videoFile,   
       uploadedBy:  req.user._id,
       status:      "pending",
     });
@@ -266,7 +264,6 @@ const createSong = async (req, res, next) => {
       data:    populatedSong,
     });
   } catch (error) {
-    // ✅ Rollback: Xóa file đã upload lên Cloudinary nếu DB lỗi
     console.error("❌ Lỗi createSong - rollback Cloudinary:", error.message);
     await Promise.allSettled([
       uploadedUrls.audio && deleteFromCloudinary(uploadedUrls.audio, "video"),
@@ -499,22 +496,21 @@ const updateSong = async (req, res, next) => {
       updateData.tags = parseTags(req.body.tags);
     }
 
-    /* ── File mới → xóa Cloudinary cũ ── */
     if (req.files?.cover?.[0]) {
       newUrls.cover         = getFileUrl(req.files.cover[0]);
-      await deleteFromCloudinary(song.coverImage, "image"); // ✅ Xóa ảnh cũ
+      await deleteFromCloudinary(song.coverImage, "image");
       updateData.coverImage = newUrls.cover;
     }
 
     if (req.files?.video?.[0]) {
       newUrls.video         = getFileUrl(req.files.video[0]);
-      await deleteFromCloudinary(song.videoFile, "video");  // ✅ Xóa video cũ
+      await deleteFromCloudinary(song.videoFile, "video");
       updateData.videoFile  = newUrls.video;
     }
 
     if (req.files?.audio?.[0]) {
       newUrls.audio         = getFileUrl(req.files.audio[0]);
-      await deleteFromCloudinary(song.audioFile, "video");  // ✅ Xóa nhạc cũ
+      await deleteFromCloudinary(song.audioFile, "video");
       updateData.audioFile  = newUrls.audio;
       updateData.duration   = await getAudioDuration(newUrls.audio);
 
@@ -555,7 +551,6 @@ const updateSong = async (req, res, next) => {
       data:    updatedSong,
     });
   } catch (error) {
-    // ✅ Rollback: Xóa file mới trên Cloudinary nếu DB lỗi
     console.error("❌ Lỗi updateSong - rollback Cloudinary:", error.message);
     await Promise.allSettled([
       newUrls.audio && deleteFromCloudinary(newUrls.audio, "video"),
@@ -590,7 +585,6 @@ const deleteSong = async (req, res, next) => {
       });
     }
 
-    // ✅ Xóa file trên Cloudinary + DB song song
     await Promise.all([
       deleteSongFromCloudinary(song),
       Song.findByIdAndDelete(req.params.id),

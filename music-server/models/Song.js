@@ -15,7 +15,7 @@ const songSchema = new mongoose.Schema(
       trim:     true,
     },
 
-    // ✅ Nghệ sĩ ft.
+    // Nghệ sĩ ft.
     featuring: { type: String, default: "", trim: true },
 
     album: {
@@ -33,7 +33,7 @@ const songSchema = new mongoose.Schema(
       default: "Pop",
     },
 
-    // ✅ Năm phát hành
+    // Năm phát hành
     releaseYear: {
       type:    Number,
       default: null,
@@ -41,7 +41,7 @@ const songSchema = new mongoose.Schema(
       max:     [new Date().getFullYear() + 1, "Năm không hợp lệ"],
     },
 
-    // ✅ Tags
+    // Tags
     tags: [{ type: String, trim: true }],
 
     duration:   { type: Number, default: 0 },
