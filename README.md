@@ -27,9 +27,8 @@ Frontend chịu trách nhiệm hiển thị giao diện, điều hướng, phát
 - Tạo, cập nhật và quản lý playlist cá nhân
 - Upload bài hát với audio, ảnh bìa và video tùy chọn
 - Quản lý hồ sơ cá nhân và avatar
-- Nhận thông báo trong ứng dụng
 - Trang admin để duyệt bài upload, quản lý người dùng và thống kê
-- Phòng nghe nhạc realtime với chat, hàng chờ, quyền host và đồng bộ player
+- Phòng nghe nhạc realtime
 - Hiển thị lyric và video trong phòng nghe nhạc
 
 ## Công Nghệ Sử Dụng
@@ -63,24 +62,6 @@ Music-Project/
   music-server/
 ```
 
-### `music-player`
-
-- `src/pages` - các trang chính của ứng dụng
-- `src/components` - component tái sử dụng
-- `src/context` - auth, music và notification context
-- `src/api` - lớp gọi API đến backend
-- `src/hooks` - custom hooks dùng chung
-- `src/styles` - style cho trang và component
-
-### `music-server`
-
-- `controllers` - xử lý logic cho từng route
-- `routes` - khai báo API endpoints
-- `models` - schema MongoDB
-- `middleware` - xác thực, upload và xử lý lỗi
-- `socket` - logic realtime cho phòng nghe nhạc
-- `config` - cấu hình database và Cloudinary
-- `jobs` - các tác vụ chạy nền
 
 ## Cài Đặt
 
@@ -118,19 +99,9 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 JWT_EXPIRE=30d
-CLIENT_URL=http://localhost:3000
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
-```
-
-### Frontend
-
-Frontend có thể chạy với cấu hình mặc định trong code. Nếu muốn override, tạo file `.env` trong `music-player`:
-
-```env
-REACT_APP_API_URL=http://localhost:5000
-REACT_APP_SOCKET_URL=http://localhost:5000
 ```
 
 ## Chạy Ứng Dụng
@@ -149,47 +120,35 @@ cd music-player
 npm start
 ```
 
-Mặc định:
-
-- Frontend: `http://localhost:3000`
-- Backend: `http://localhost:5000`
-
-## Demo
-
-Hiện tại dự án chưa có link triển khai công khai.
-
-Nếu bạn đã deploy sau này, hãy thêm các mục sau vào đây:
-
-- Frontend demo
-- Backend API
-- Socket.io endpoint
-
-Ví dụ:
-
-```text
-Frontend: https://your-frontend-domain.com
-Backend: https://your-backend-domain.com
-```
-
-## Preview
-
-![Home Preview](./music-player/review/home.jpg)
 
 ## Các Khu Vực Chính Trong Ứng Dụng
 
 - Trang chủ
+![Home Preview](./music-player/review/home.jpg)
 - Chi tiết bài hát
+![SongDetail Preview](./music-player/review/SongDetail.jpg)
 - Kết quả tìm kiếm
+![Search Preview](./music-player/review/Search.jpg)
 - Favorites
+![Favorite Preview](./music-player/review/Favorite.jpg)
 - Playlist
-- My playlists
+![Playlist Preview](./music-player/review/PlayList.jpg)
+- History
+![History Preview](./music-player/review/History.jpg)
 - Upload
+![Upload Preview](./music-player/review/Upload1.jpg)
+![Upload Preview](./music-player/review/Upload2.jpg)
+![Upload Preview](./music-player/review/Upload3.jpg)
 - Profile
+![Profile Preview](./music-player/review/Prrofile.jpg)
 - Notifications
+![Noti Preview](./music-player/review/Notifications.jpg)
 - Admin dashboard
+![Admin Preview](./music-player/review/Admin.jpg)
 - Rooms lobby
+![room Preview](./music-player/review/RoomLobby.jpg)
 - Room detail
-
+![Room Preview](./music-player/review/RoomDetail.jpg)
 ## Tổng Quan API
 
 Backend cung cấp các nhóm API chính sau:
@@ -243,26 +202,4 @@ Phần phòng nghe nhạc dùng Socket.io để đồng bộ trạng thái giữ
 
 - Backend cần MongoDB và Cloudinary hoạt động trước khi khởi động.
 - Frontend dùng `proxy` tới `http://localhost:5000` trong môi trường phát triển.
-- Media upload được lưu qua Cloudinary và phục vụ qua backend theo luồng xử lý của ứng dụng.
-- Không nên commit secret thật trong file `.env`.
-
-## Scripts Có Sẵn
-
-### Frontend
-
-```bash
-npm start
-npm run build
-npm test
-```
-
-### Backend
-
-```bash
-npm run dev
-npm start
-```
-
-## License
-
-Dự án hiện chưa khai báo license.
+- Media upload được lưu qua Cloudinary.
