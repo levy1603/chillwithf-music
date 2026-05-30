@@ -1,4 +1,4 @@
-﻿// src/pages/RoomPage/RoomQueue.jsx
+// src/pages/RoomPage/RoomQueue.jsx
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { FaMusic, FaTrash, FaSearch, FaPlus, FaPlay } from "react-icons/fa";
 import { API_ORIGIN } from "../../config/api";
