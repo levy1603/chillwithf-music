@@ -7,9 +7,12 @@ const dotenv  = require("dotenv");
 const http    = require("http");
 const { Server } = require("socket.io");
 
-const result = dotenv.config();
-if (result.error)           process.exit(1);
-if (!process.env.MONGO_URI) process.exit(1);
+dotenv.config();
+
+if (!process.env.MONGO_URI) {
+  console.error("❌ Missing MONGO_URI environment variable");
+  process.exit(1);
+}
 
 const connectDB = require("./config/db");
 
