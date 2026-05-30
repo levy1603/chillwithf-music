@@ -6,6 +6,8 @@
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?logo=socket.io&logoColor=white)](https://socket.io/)
 
+https://chillwithf-music.vercel.app/
+
 Music Project là một ứng dụng nghe nhạc full-stack, kết hợp giữa trải nghiệm phát nhạc cá nhân và phòng nghe nhạc realtime theo nhóm.
 
 Hệ thống được xây dựng với React ở frontend và Node.js, Express, MongoDB, Socket.io ở backend. Ứng dụng hỗ trợ đăng nhập, quản lý bài hát, playlist, yêu thích, upload media, thông báo, trang admin, và đồng bộ phát nhạc trong phòng chat realtime.
