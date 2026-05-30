@@ -28,6 +28,7 @@ const Sidebar = () => {
   });
   const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const showText = isMobile || !collapsed;
 
   useEffect(() => {
     const handleResize = () => {
@@ -243,7 +244,7 @@ const Sidebar = () => {
       <div className="sidebar-scroll">
         {/* MENU */}
         <nav className="sidebar-nav">
-          {!collapsed && <h3 className="sidebar-title">MENU</h3>}
+          {showText && <h3 className="sidebar-title">MENU</h3>}
 
           {mainLinks.map((item) => {
             const Icon = item.icon;
@@ -261,7 +262,7 @@ const Sidebar = () => {
                 }}
               >
                 <Icon />
-                {!collapsed && <span>{item.label}</span>}
+                {showText && <span>{item.label}</span>}
               </NavLink>
             );
           })}
@@ -269,7 +270,7 @@ const Sidebar = () => {
 
         {/* KHÁM PHÁ */}
         <div className="sidebar-playlists">
-          {!collapsed && (
+          {showText && (
             <h3 className="sidebar-title sidebar-title-with-icon">
               <FaCompass />
               <span>KHÁM PHÁ</span>
@@ -287,7 +288,7 @@ const Sidebar = () => {
                 onClick={() => handleExploreClick(item.to)}
               >
                 <Icon />
-                {!collapsed && <span>{item.label}</span>}
+                {showText && <span>{item.label}</span>}
               </button>
             );
           })}
@@ -296,7 +297,7 @@ const Sidebar = () => {
         {/* QUẢN TRỊ */}
         {isAuthenticated && user?.role === "admin" && (
           <div className="sidebar-admin">
-            {!collapsed && <h3 className="sidebar-title">QUẢN TRỊ</h3>}
+            {showText && <h3 className="sidebar-title">QUẢN TRỊ</h3>}
 
             <NavLink
               to="/admin"
@@ -309,7 +310,7 @@ const Sidebar = () => {
               }}
             >
               <FaUserShield />
-              {!collapsed && <span>Quản Trị</span>}
+              {showText && <span>Quản Trị</span>}
             </NavLink>
           </div>
         )}
