@@ -437,7 +437,7 @@ const SearchBar = () => {
                         alt={song.title}
                         className="suggestion-cover"
                         onError={(e) => {
-                          e.target.src = "/images/default-cover.jpg";
+                          e.target.src = "/images/default-cover.svg";
                         }}
                       />
 

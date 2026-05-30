@@ -87,6 +87,19 @@ const roomSchema = new mongoose.Schema(
       },
     ],
 
+    playbackHistory: [
+      {
+        songId: String,
+        title: String,
+        artist: String,
+        thumbnail: String,
+        duration: Number,
+        audioUrl: String,
+        youtubeUrl: String,
+        videoFile: String,
+      },
+    ],
+
     isActive: {
       type: Boolean,
       default: true,

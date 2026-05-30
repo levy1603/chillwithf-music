@@ -14,7 +14,7 @@ import AddToPlaylistModal from "./playlist/AddToPlaylistModal";
 import ConfirmModal from "./common/ConfirmModal";
 import "../styles/components/SongItem.css";
 
-const DEFAULT_COVER = "/images/default-cover.jpg";
+const DEFAULT_COVER = "/images/default-cover.svg";
 
 const formatDuration = (seconds) => {
   if (!seconds || Number.isNaN(seconds)) return "--:--";

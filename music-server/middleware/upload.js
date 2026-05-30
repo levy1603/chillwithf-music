@@ -53,8 +53,10 @@ const uploadSongFiles = multer({
       else cb(new Error("Field không hợp lệ"));
     },
     _removeFile(req, file, cb) {
-      if (file.fieldname === "audio" || file.fieldname === "video") {
+      if (file.fieldname === "audio") {
         audioStorage._removeFile(req, file, cb);
+      } else if (file.fieldname === "video") {
+        videoStorage._removeFile(req, file, cb);
       } else {
         coverStorage._removeFile(req, file, cb);
       }

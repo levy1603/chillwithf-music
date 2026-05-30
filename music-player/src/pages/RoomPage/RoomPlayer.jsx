@@ -313,10 +313,10 @@ const RoomPlayer = ({
       {/* Thumbnail */}
       <div className="rp-thumb-wrap">
         <img
-          src={currentSong.thumbnail || "/images/default-cover.png"}
+          src={currentSong.thumbnail || "/images/default-cover.svg"}
           alt={currentSong.title}
           className={`rp-thumb ${shouldSpinCover ? "rp-thumb--spin" : ""}`}
-          onError={(e) => (e.currentTarget.src = "/images/default-cover.png")}
+          onError={(e) => (e.currentTarget.src = "/images/default-cover.svg")}
         />
         <div className="rp-thumb-glow" />
       </div>

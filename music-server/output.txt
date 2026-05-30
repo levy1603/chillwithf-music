@@ -1,7 +1,0 @@
-◇ injecting env (4) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
-🔄 Đang kết nối MongoDB Atlas...
-✅ MongoDB Connected: ac-ftip8yj-shard-00-00.rufpynq.mongodb.net
-[Cleanup] ✅ Job started (runs every 24 hours)
-✅ Server running on port 5000
-📡 API: http://localhost:5000/api
-^C

@@ -7,6 +7,7 @@ import {
   FaArrowLeft, FaFilter,
 } from "react-icons/fa";
 import { useNotifications } from "../context/NotificationContext";
+import { API_ORIGIN } from "../config/api";
 import "../styles/pages/NotificationsPage.css";
 
 /* ══════════════════════════════════════════
@@ -65,7 +66,7 @@ const formatTime = (dateStr) => {
 ══════════════════════════════════════════ */
 const NotifAvatar = ({ noti, cfg }) => {
   const coverURL = noti.data?.coverImage
-    ? `http://localhost:5000/uploads/covers/${noti.data.coverImage}`
+    ? `${API_ORIGIN}/uploads/covers/${noti.data.coverImage}`
     : null;
 
   if (noti.type === "song_approved" || noti.type === "song_rejected") {

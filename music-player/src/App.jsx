@@ -21,6 +21,7 @@ import MyPlaylists from "./pages/MyPlaylists";
 import Upload from "./pages/Upload";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import GoogleAuthCallback from "./pages/GoogleAuthCallback";
 import SongDetail from "./pages/SongDetail";
 import ProfilePage from "./pages/ProfilePage";
 import SearchResults from "./pages/SearchResults";
@@ -253,6 +254,7 @@ function AppRoutes() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/auth/google/callback" element={<GoogleAuthCallback />} />
       <Route path="/*" element={<MusicAppRoutes />} />
     </Routes>
   );

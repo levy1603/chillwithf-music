@@ -36,7 +36,7 @@ import "../styles/pages/SongDetail.css";
 import getAvatarURL, { DEFAULT_AVATAR_URL } from "../utils/getAvatarURL";
 
 const DEFAULT_AVATAR = DEFAULT_AVATAR_URL;
-const DEFAULT_COVER = "/images/default-cover.jpg";
+const DEFAULT_COVER = "/images/default-cover.svg";
 
 /* ══════════════════════════════════════════
    HELPERS
@@ -61,11 +61,13 @@ const KaraokeLyrics = React.memo(({ lrcText, currentTime }) => {
   const [activeIndex, setActiveIndex] = useState(-1);
   const activeLineRef = useRef(null);
   const containerRef = useRef(null);
+  const prevActiveIndexRef = useRef(-1);
 
   useEffect(() => {
     const parsedLines = lrcText ? parseLRC(lrcText) : [];
     setLines(parsedLines);
     setActiveIndex(-1);
+    prevActiveIndexRef.current = -1;
   }, [lrcText]);
 
   useEffect(() => {
@@ -73,13 +75,30 @@ const KaraokeLyrics = React.memo(({ lrcText, currentTime }) => {
   }, [lines, currentTime]);
 
   useEffect(() => {
+    if (!activeLineRef.current || !containerRef.current || activeIndex < 0) {
+      return;
+    }
+
+    const prevIndex = prevActiveIndexRef.current;
+    prevActiveIndexRef.current = activeIndex;
+
+    const jumpedTooFar = prevIndex >= 0 && Math.abs(activeIndex - prevIndex) > 4;
+    const jumpedToLastLineAbruptly =
+      prevIndex >= 0 &&
+      activeIndex === lines.length - 1 &&
+      prevIndex < lines.length - 3;
+
+    if (jumpedTooFar || jumpedToLastLineAbruptly) {
+      return;
+    }
+
     if (activeLineRef.current && containerRef.current) {
       activeLineRef.current.scrollIntoView({
         behavior: "smooth",
         block: "center",
       });
     }
-  }, [activeIndex]);
+  }, [activeIndex, lines.length]);
 
   if (!lines.length) return null;
 

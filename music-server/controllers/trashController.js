@@ -2,23 +2,14 @@ const Song = require("../models/Song");
 const SongTrash = require("../models/SongTrash");
 const User = require("../models/User");
 const Playlist = require("../models/Playlist");
-const fs = require("fs");
-const path = require("path");
+const { deleteFromCloudinary } = require("../config/cloudinary");
 
-const deletePhysicalFile = (filename, subFolder) => {
-  if (!filename) return;
-  if (filename === "default-cover.jpg") return;
-  if (filename.startsWith("http")) return;
-
-  try {
-    const filePath = path.join(__dirname, "..", "uploads", subFolder, filename);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-      console.log(`[Trash] Deleted: uploads/${subFolder}/${filename}`);
-    }
-  } catch (error) {
-    console.error("[Trash] deleteFile error:", error.message);
-  }
+const deleteSongMedia = async (songData = {}) => {
+  await Promise.allSettled([
+    deleteFromCloudinary(songData.audioFile, "video"),
+    deleteFromCloudinary(songData.coverImage, "image"),
+    deleteFromCloudinary(songData.videoFile, "video"),
+  ]);
 };
 
 const getTrash = async (req, res) => {
@@ -71,6 +62,7 @@ const softDelete = async (req, res) => {
         genre: song.genre,
         audioFile: song.audioFile,
         coverImage: song.coverImage,
+        videoFile: song.videoFile,
         duration: song.duration,
         playCount: song.playCount,
         status: song.status,
@@ -142,8 +134,7 @@ const permanentDelete = async (req, res) => {
       });
     }
 
-    deletePhysicalFile(trashItem.songData.audioFile, "songs");
-    deletePhysicalFile(trashItem.songData.coverImage, "covers");
+    await deleteSongMedia(trashItem.songData);
 
     await Song.findByIdAndDelete(trashItem.originalSongId);
     await User.updateMany(

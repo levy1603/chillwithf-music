@@ -56,7 +56,13 @@ const SearchResults = () => {
     currentPage: 1,
   });
 
-  const hasAnyFilter = query || year || genre || album || tag;
+  const hasAnyFilter =
+    !!query ||
+    !!year ||
+    !!genre ||
+    !!album ||
+    !!tag ||
+    sort !== "newest";
 
   useEffect(() => {
     setInnerKeyword("");

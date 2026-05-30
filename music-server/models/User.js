@@ -24,6 +24,12 @@ const userSchema = new mongoose.Schema(
         "Email không hợp lệ",
       ],
     },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+      default: null,
+    },
     password: {
       type: String,
       required: [true, "Vui lòng nhập mật khẩu"],
@@ -71,14 +77,16 @@ const userSchema = new mongoose.Schema(
 // Hash password trước khi lưu
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
-    next();
+    return next();
   }
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
 // So sánh password
 userSchema.methods.matchPassword = async function (enteredPassword) {
+  if (!this.password) return false;
   return await bcrypt.compare(enteredPassword, this.password);
 };
 

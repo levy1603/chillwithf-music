@@ -12,7 +12,6 @@ const socketAuthMiddleware = async (socket, next) => {
       return next(new Error("Không có token xác thực"));
     }
 
-    // ✅ Dùng decoded.id cho khớp với middleware auth.js của bạn
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select("username avatar _id isBanned");
 
@@ -20,7 +19,6 @@ const socketAuthMiddleware = async (socket, next) => {
       return next(new Error("Người dùng không tồn tại"));
     }
 
-    // ✅ Kiểm tra ban như trong auth.js của bạn
     if (user.isBanned) {
       return next(new Error("Tài khoản của bạn đã bị khóa"));
     }

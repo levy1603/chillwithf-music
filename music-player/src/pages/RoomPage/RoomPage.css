@@ -855,7 +855,8 @@ input[type="range"] {
    ROOM DETAIL
    ================================================================ */
 .room-detail {
-  height: calc(100vh - 70px);
+  height: 100vh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;

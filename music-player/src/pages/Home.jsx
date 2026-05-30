@@ -29,6 +29,7 @@ const Home = () => {
     filteredSongs = [],
     searchTerm,
     loading,
+    searchLoading,
     songs = [],
     recentlyPlayedSongs = [],
   } = useMusicContext();
@@ -78,7 +79,7 @@ const Home = () => {
     });
   }, [filteredSongs, activeMood]);
 
-  if (loading) {
+  if (loading || (searchTerm && searchLoading)) {
     return (
       <div className="home-page">
         <div className="home-loading">
@@ -306,7 +307,7 @@ const Home = () => {
           songs={moodFilteredSongs}
           title=""
           source="home"
-          queue={songs}
+          queue={moodFilteredSongs}
         />
       </section>
     </div>

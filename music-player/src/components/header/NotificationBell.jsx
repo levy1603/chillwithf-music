@@ -10,9 +10,10 @@ import {
 } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import { useNotifications } from "../../context/NotificationContext";
+import { API_ORIGIN } from "../../config/api";
 import "./NotificationBell.css";
 
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE = API_ORIGIN;
 
 const TYPE_CONFIG = {
   song_approved: {

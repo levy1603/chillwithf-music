@@ -44,7 +44,7 @@ router.get("/admin/uploads", protect, admin, getAllUploadsAdmin);
 router.patch("/admin/uploads/:id/approve", protect, admin, approveSong);
 router.patch("/admin/uploads/:id/reject", protect, admin, rejectSong);
 
-/* ── STATIC routes - PHẢI ĐẶT TRƯỚC /:id ── */
+/* ── STATIC routes - /:id ── */
 router.get("/filter-options", getSongFilterOptions);
 router.get("/top", getTopSongs);
 router.get("/my-songs", protect, getMySongs);
@@ -72,6 +72,7 @@ router.put(
   "/:id",
   protect,
   uploadSongFiles.fields([
+    { name: "audio", maxCount: 1 },
     { name: "cover", maxCount: 1 },
     { name: "video", maxCount: 1 },
   ]),

@@ -4,6 +4,7 @@ const RoomMessage = require("../models/RoomMessage");
 
 
 const roomStates = new Map();
+const HISTORY_LIMIT = 30;
 
 /* ============================================================
    Helpers
@@ -36,6 +37,32 @@ const getCurrentPlayerTime = (roomId) => {
   // Không vượt quá duration
   const maxTime = state.duration || Infinity;
   return Math.min(currentTime, maxTime);
+};
+
+const resolveSyncTimestamp = (room) => {
+  const updatedAt = room?.playerState?.updatedAt;
+  const parsed = updatedAt ? new Date(updatedAt).getTime() : NaN;
+  return Number.isFinite(parsed) ? parsed : Date.now();
+};
+
+const hydrateRoomState = (roomId, room, options = {}) => {
+  const { forceRefresh = false } = options;
+  const existing = roomStates.get(roomId);
+  if (existing && !forceRefresh) return existing;
+
+  const state = {
+    isPlaying: room?.playerState?.isPlaying || false,
+    currentTime: room?.playerState?.currentTime || 0,
+    volume: room?.playerState?.volume ?? 80,
+    duration: room?.currentSong?.duration || 0,
+    syncTimestamp: resolveSyncTimestamp(room),
+    history: Array.isArray(room?.playbackHistory)
+      ? room.playbackHistory.slice(-HISTORY_LIMIT)
+      : [],
+  };
+
+  roomStates.set(roomId, state);
+  return state;
 };
 
 // Ghi log socket events trong dev mode
@@ -136,17 +163,8 @@ const roomHandler = (io) => {
           $addToSet: { onlineUsers: user._id },
         });
 
-        // 6. Khởi tạo state nếu chưa có
-        if (!roomStates.has(roomId)) {
-          roomStates.set(roomId, {
-            isPlaying: room.playerState?.isPlaying || false,
-            currentTime: room.playerState?.currentTime || 0,
-            volume: room.playerState?.volume || 80,
-            duration: room.currentSong?.duration || 0,
-            syncTimestamp: Date.now(),
-            history: [],
-          });
-        }
+        // 6. Khoi tao state tu DB neu chua co trong RAM
+        const state = hydrateRoomState(roomId, room);
 
         // 7. Lấy lịch sử chat (50 tin gần nhất)
         const messages = await RoomMessage.find({ room: roomId })
@@ -159,7 +177,6 @@ const roomHandler = (io) => {
         const onlineUsers = await getOnlineUsersInRoom(io, roomId);
 
         // 9. Tính currentTime chính xác
-        const state = roomStates.get(roomId);
         const accurateCurrentTime = getCurrentPlayerTime(roomId);
 
         // 10. Gửi dữ liệu khởi tạo cho user vừa join
@@ -222,7 +239,9 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:play-pause", async ({ roomId }) => {
       try {
-        const room = await Room.findById(roomId).select("host");
+        const room = await Room.findById(roomId).select(
+          "host playerState currentSong playbackHistory"
+        );
         if (!room) return;
 
         // Chỉ host mới được điều khiển
@@ -233,8 +252,7 @@ const roomHandler = (io) => {
           });
         }
 
-        const state = roomStates.get(roomId);
-        if (!state) return;
+        const state = hydrateRoomState(roomId, room);
 
         // Toggle play/pause
         const currentTime = getCurrentPlayerTime(roomId);
@@ -246,7 +264,9 @@ const roomHandler = (io) => {
         Room.findByIdAndUpdate(roomId, {
           "playerState.isPlaying": state.isPlaying,
           "playerState.currentTime": currentTime,
+          "playerState.volume": state.volume,
           "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
         }).catch(console.error);
 
         // Broadcast cho tất cả trong phòng
@@ -272,7 +292,9 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:seek", async ({ roomId, time }) => {
       try {
-        const room = await Room.findById(roomId).select("host");
+        const room = await Room.findById(roomId).select(
+          "host playerState currentSong playbackHistory"
+        );
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) {
@@ -282,11 +304,16 @@ const roomHandler = (io) => {
           });
         }
 
-        const state = roomStates.get(roomId);
-        if (!state) return;
+        const state = hydrateRoomState(roomId, room);
 
         state.currentTime = Math.max(0, time);
         state.syncTimestamp = Date.now();
+
+        Room.findByIdAndUpdate(roomId, {
+          "playerState.currentTime": state.currentTime,
+          "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
+        }).catch(console.error);
 
         io.to(roomId).emit("room:player-sync", {
           isPlaying: state.isPlaying,
@@ -306,19 +333,29 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:volume-change", async ({ roomId, volume }) => {
       try {
-        const room = await Room.findById(roomId).select("host");
+        const room = await Room.findById(roomId).select(
+          "host playerState currentSong playbackHistory"
+        );
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) return;
 
-        const state = roomStates.get(roomId);
-        if (!state) return;
+        const state = hydrateRoomState(roomId, room);
 
         state.volume = Math.min(Math.max(volume, 0), 100);
+        state.syncTimestamp = Date.now();
+        const currentTime = getCurrentPlayerTime(roomId);
+
+        Room.findByIdAndUpdate(roomId, {
+          "playerState.volume": state.volume,
+          "playerState.currentTime": currentTime,
+          "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
+        }).catch(console.error);
 
         io.to(roomId).emit("room:player-sync", {
           isPlaying: state.isPlaying,
-          currentTime: getCurrentPlayerTime(roomId),
+          currentTime,
           volume: state.volume,
           timestamp: Date.now(),
         });
@@ -332,7 +369,9 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:change-song", async ({ roomId, song }) => {
       try {
-        const room = await Room.findById(roomId).select("host currentSong");
+        const room = await Room.findById(roomId).select(
+          "host currentSong playerState playbackHistory"
+        );
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) {
@@ -362,11 +401,11 @@ const roomHandler = (io) => {
         };
 
         // Reset state
-        const state = roomStates.get(roomId) || {};
+        const state = hydrateRoomState(roomId, room);
         if (hasPlayableSource(room.currentSong) && !isSameSong(room.currentSong, newSong)) {
           state.history = Array.isArray(state.history) ? state.history : [];
           state.history.push(room.currentSong);
-          if (state.history.length > 30) state.history.shift();
+          if (state.history.length > HISTORY_LIMIT) state.history.shift();
         }
         state.isPlaying = true;
         state.currentTime = 0;
@@ -379,7 +418,9 @@ const roomHandler = (io) => {
           currentSong: newSong,
           "playerState.isPlaying": true,
           "playerState.currentTime": 0,
+          "playerState.volume": state.volume,
           "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
         });
 
         // Broadcast
@@ -404,7 +445,9 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:next-song", async ({ roomId }) => {
       try {
-        const room = await Room.findById(roomId).select("host queue currentSong");
+        const room = await Room.findById(roomId).select(
+          "host queue currentSong playerState playbackHistory"
+        );
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) return;
@@ -424,11 +467,11 @@ const roomHandler = (io) => {
         }
 
         // Reset state
-        const state = roomStates.get(roomId) || {};
+        const state = hydrateRoomState(roomId, room);
         if (hasPlayableSource(room.currentSong)) {
           state.history = Array.isArray(state.history) ? state.history : [];
           state.history.push(room.currentSong);
-          if (state.history.length > 30) state.history.shift();
+          if (state.history.length > HISTORY_LIMIT) state.history.shift();
         }
         state.isPlaying = true;
         state.currentTime = 0;
@@ -442,7 +485,9 @@ const roomHandler = (io) => {
           queue: newQueue,
           "playerState.isPlaying": true,
           "playerState.currentTime": 0,
+          "playerState.volume": state.volume,
           "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
         });
 
         // Broadcast
@@ -469,12 +514,14 @@ const roomHandler = (io) => {
     ---------------------------------------------------------- */
     socket.on("room:prev-song", async ({ roomId }) => {
       try {
-        const room = await Room.findById(roomId).select("host queue currentSong");
+        const room = await Room.findById(roomId).select(
+          "host queue currentSong playerState playbackHistory"
+        );
         if (!room) return;
 
         if (room.host.toString() !== user._id.toString()) return;
 
-        const state = roomStates.get(roomId) || {};
+        const state = hydrateRoomState(roomId, room);
         const history = Array.isArray(state.history) ? state.history : [];
 
         if (history.length === 0) {
@@ -501,7 +548,9 @@ const roomHandler = (io) => {
           queue: newQueue,
           "playerState.isPlaying": true,
           "playerState.currentTime": 0,
+          "playerState.volume": state.volume,
           "playerState.updatedAt": new Date(),
+          playbackHistory: state.history,
         });
 
         io.to(roomId).emit("room:song-changed", {
@@ -784,10 +833,16 @@ const roomHandler = (io) => {
         console.error("[room:close]", err);
       }
     });
-    socket.on("room:request-sync", ({ roomId }) => {
+    socket.on("room:request-sync", async ({ roomId }) => {
       try {
-        const state = roomStates.get(roomId);
-        if (!state) return;
+        const room = await Room.findById(roomId).select(
+          "playerState currentSong playbackHistory"
+        );
+        if (!room) return;
+
+        // Use DB as source of truth during sync to reduce drift
+        // after reconnect/restart.
+        const state = hydrateRoomState(roomId, room, { forceRefresh: true });
 
         const currentTime = getCurrentPlayerTime(roomId);
 
@@ -837,9 +892,12 @@ const handleLeaveRoom = async (socket, io, roomId, user) => {
 
     // Kiểm tra phòng có còn người không
     if (onlineUsers.length === 0) {
-      // Phòng trống: xóa state khỏi memory
+      // Phong trong: dong phong va xoa du lieu lien quan
+      await Promise.all([
+        RoomMessage.deleteMany({ room: roomId }),
+        Room.findByIdAndDelete(roomId),
+      ]);
       roomStates.delete(roomId);
-      // await Room.findByIdAndUpdate(roomId, { isActive: false });
       logEvent("room:empty", { roomId });
     } else {
       // Kiểm tra host có còn trong phòng không
@@ -889,4 +947,6 @@ const handleLeaveRoom = async (socket, io, roomId, user) => {
 };
 
 module.exports = roomHandler;
+
+
 

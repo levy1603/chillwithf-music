@@ -114,7 +114,7 @@ const AdminSongs = () => {
                       src={getCoverURL(song)}
                       alt={song.title}
                       onError={(event) => {
-                        event.target.src = "/images/default-cover.jpg";
+                        event.target.src = "/images/default-cover.svg";
                       }}
                     />
                     <span>{song.title}</span>

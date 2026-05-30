@@ -20,6 +20,7 @@ const songTrashSchema = new mongoose.Schema(
       genre      : { type: String },
       audioFile  : { type: String },
       coverImage : { type: String },
+      videoFile  : { type: String },
       duration   : { type: Number, default: 0 },
       playCount  : { type: Number, default: 0 },
       status     : { type: String },

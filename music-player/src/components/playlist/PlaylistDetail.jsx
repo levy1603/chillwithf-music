@@ -182,7 +182,7 @@ const PlaylistDetail = ({
                       src={getCoverURL(song)}
                       alt={song.title}
                       onError={(e) => {
-                        e.currentTarget.src = "/images/default-cover.jpg";
+                        e.currentTarget.src = "/images/default-cover.svg";
                       }}
                     />
                     <span>{song.title}</span>

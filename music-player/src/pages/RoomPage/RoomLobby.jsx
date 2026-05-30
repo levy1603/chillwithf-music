@@ -52,28 +52,11 @@ const RoomLobby = () => {
   const [showCreate, setShowCreate] = useState(false);
   const [filter, setFilter] = useState("all"); // all | public | private
   const [searchTerm, setSearchTerm] = useState("");
-  const closingOrphanRoomIdsRef = useRef(new Set());
+  const loggedOrphanRoomIdsRef = useRef(new Set());
 
   const hasValidHost = (room) => {
     const hostId = room?.host?._id ?? room?.host;
     return !!hostId;
-  };
-
-  const closeRoomWithoutHost = async (roomId) => {
-    if (!roomId || closingOrphanRoomIdsRef.current.has(roomId)) return;
-
-    closingOrphanRoomIdsRef.current.add(roomId);
-
-    try {
-      const token = localStorage.getItem("token");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await fetch(`/api/rooms/${roomId}`, {
-        method: "DELETE",
-        headers,
-      });
-    } catch (err) {
-      console.error("Khong the dong phong khong co host:", err);
-    }
   };
 
   useEffect(() => {
@@ -92,7 +75,12 @@ const RoomLobby = () => {
       setRooms(activeRooms);
 
       if (roomsWithoutHost.length > 0) {
-        roomsWithoutHost.forEach((room) => closeRoomWithoutHost(room?._id));
+        roomsWithoutHost.forEach((room) => {
+          const roomId = room?._id;
+          if (!roomId || loggedOrphanRoomIdsRef.current.has(roomId)) return;
+          loggedOrphanRoomIdsRef.current.add(roomId);
+          console.warn("Bo qua phong khong co host:", roomId);
+        });
       }
     } catch (err) {
       console.error("Loi tai phong:", err);

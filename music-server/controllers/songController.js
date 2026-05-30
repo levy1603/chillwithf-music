@@ -152,7 +152,7 @@ const getSongFilterOptions = async (req, res, next) => {
       Song.aggregate([
         { $match:  baseMatch },
         { $unwind: "$tags" },
-        { $match:  { tags: { $ne: null, $ne: "" } } },
+        { $match:  { tags: { $nin: [null, ""] } } },
         { $group:  { _id: "$tags" } },
         { $sort:   { _id: 1 } },
       ]),
@@ -465,21 +465,14 @@ const updateSong = async (req, res, next) => {
     }
 
     /* ── Kiểm tra quyền ── */
-    const allowedWithoutAuth = ["lyrics", "lrc"];
-    const onlyLyricsOrLRC    = Object.keys(req.body).every((k) =>
-      allowedWithoutAuth.includes(k)
-    );
-
-    if (!onlyLyricsOrLRC) {
-      if (
-        song.uploadedBy.toString() !== req.user._id.toString() &&
-        req.user.role !== "admin"
-      ) {
-        return res.status(403).json({
-          success: false,
-          message: "Bạn không có quyền chỉnh sửa bài hát này",
-        });
-      }
+    if (
+      song.uploadedBy.toString() !== req.user._id.toString() &&
+      req.user.role !== "admin"
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền chỉnh sửa bài hát này",
+      });
     }
 
     /* ── Build updateData ── */
@@ -496,21 +489,24 @@ const updateSong = async (req, res, next) => {
       updateData.tags = parseTags(req.body.tags);
     }
 
+    const oldMedia = {
+      audio: song.audioFile,
+      cover: song.coverImage,
+      video: song.videoFile,
+    };
+
     if (req.files?.cover?.[0]) {
       newUrls.cover         = getFileUrl(req.files.cover[0]);
-      await deleteFromCloudinary(song.coverImage, "image");
       updateData.coverImage = newUrls.cover;
     }
 
     if (req.files?.video?.[0]) {
       newUrls.video         = getFileUrl(req.files.video[0]);
-      await deleteFromCloudinary(song.videoFile, "video");
       updateData.videoFile  = newUrls.video;
     }
 
     if (req.files?.audio?.[0]) {
       newUrls.audio         = getFileUrl(req.files.audio[0]);
-      await deleteFromCloudinary(song.audioFile, "video");
       updateData.audioFile  = newUrls.audio;
       updateData.duration   = await getAudioDuration(newUrls.audio);
 
@@ -544,6 +540,21 @@ const updateSong = async (req, res, next) => {
       updateData,
       { new: true, runValidators: true }
     ).populate("uploadedBy", "username avatar");
+
+    const cleanupTasks = [];
+    if (newUrls.cover && oldMedia.cover && oldMedia.cover !== newUrls.cover) {
+      cleanupTasks.push(deleteFromCloudinary(oldMedia.cover, "image"));
+    }
+    if (newUrls.video && oldMedia.video && oldMedia.video !== newUrls.video) {
+      cleanupTasks.push(deleteFromCloudinary(oldMedia.video, "video"));
+    }
+    if (newUrls.audio && oldMedia.audio && oldMedia.audio !== newUrls.audio) {
+      cleanupTasks.push(deleteFromCloudinary(oldMedia.audio, "video"));
+    }
+
+    if (cleanupTasks.length > 0) {
+      Promise.allSettled(cleanupTasks).catch(() => {});
+    }
 
     res.status(200).json({
       success: true,
@@ -663,7 +674,9 @@ const likeSong = async (req, res, next) => {
       });
     }
 
-    const isLiked = user.favorites.includes(songId);
+    const isLiked = user.favorites.some(
+      (id) => id.toString() === songId.toString()
+    );
 
     if (isLiked) {
       await Promise.all([

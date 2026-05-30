@@ -4,7 +4,13 @@ import { FaClock } from "react-icons/fa";
 import SongItem from "./SongItem";
 import "../styles/components/SongList.css";
 
-const SongList = ({ songs = [], title, source = "home", queue = [] }) => {
+const SongList = ({
+  songs = [],
+  title,
+  source = "home",
+  queue = [],
+  emptyText = "Không tìm thấy bài hát nào 😢",
+}) => {
   return (
     <div className="song-list">
       {title && <h2 className="song-list-title">{title}</h2>}
@@ -34,7 +40,7 @@ const SongList = ({ songs = [], title, source = "home", queue = [] }) => {
           ))
         ) : (
           <div className="no-songs">
-            <p>Không tìm thấy bài hát nào 😢</p>
+            <p>{emptyText}</p>
           </div>
         )}
       </div>

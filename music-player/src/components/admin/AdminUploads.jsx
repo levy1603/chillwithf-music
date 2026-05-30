@@ -11,6 +11,7 @@ import {
 import songAPI from "../../api/songAPI";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
+import { API_ORIGIN } from "../../config/api";
 import "../../styles/components/admin/AdminUploads.css";
 
 /* ════════════════════════════════════════════════════════════
@@ -46,19 +47,19 @@ const formatDate = (iso) => {
 const getImageURL = (song) => {
   if (!song?.coverImage || song.coverImage === "default-cover.jpg") return null;
   if (song.coverImage.startsWith("http")) return song.coverImage;
-  return `http://localhost:5000/uploads/covers/${song.coverImage}`;
+  return `${API_ORIGIN}/uploads/covers/${song.coverImage}`;
 };
 
 const getAudioURL = (song) => {
   if (!song?.audioFile) return null;
   if (song.audioFile.startsWith("http")) return song.audioFile;
-  return `http://localhost:5000/uploads/songs/${song.audioFile}`;
+  return `${API_ORIGIN}/uploads/songs/${song.audioFile}`;
 };
 
 const getVideoURL = (song) => {
   if (!song?.videoFile || song.videoFile === "") return null;
   if (song.videoFile.startsWith("http")) return song.videoFile;
-  return `http://localhost:5000/uploads/videos/${song.videoFile}`;
+  return `${API_ORIGIN}/uploads/videos/${song.videoFile}`;
 };
 
 /* ════════════════════════════════════════════════════════════

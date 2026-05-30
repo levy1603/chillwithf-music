@@ -99,10 +99,19 @@ PORT=5000
 MONGO_URI=your_mongodb_connection_string
 JWT_SECRET=your_secret_key
 JWT_EXPIRE=30d
+CLIENT_URL=http://localhost:3000
 CLOUDINARY_CLOUD_NAME=your_cloud_name
 CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
+GOOGLE_CLIENT_CALLBACK_URL=http://localhost:3000/auth/google/callback
 ```
+
+Khi táº¡o OAuth Client trÃªn Google Cloud, thÃªm `Authorized redirect URI`:
+
+- `http://localhost:5000/api/auth/google/callback`
 
 ## Chạy Ứng Dụng
 

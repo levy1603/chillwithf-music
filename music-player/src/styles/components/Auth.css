@@ -542,6 +542,33 @@
   padding-left: 2px;
 }
 
+/* ===== DIVIDER ===== */
+.auth-divider {
+  position: relative;
+  margin: 4px 0;
+  text-align: center;
+}
+
+.auth-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.auth-divider span {
+  position: relative;
+  display: inline-block;
+  padding: 0 10px;
+  background: rgba(12, 18, 35, 0.92);
+  color: #9fb0d2;
+  font-size: 12px;
+  font-weight: 700;
+}
+
 /* ===== BTN ===== */
 .auth-btn {
   margin-top: 4px;
@@ -569,6 +596,18 @@
 .auth-btn:disabled {
   opacity: 0.7;
   cursor: not-allowed;
+}
+
+.auth-btn-google {
+  margin-top: 0;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: none;
+}
+
+.auth-btn-google:hover:not(:disabled) {
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 .spinner {
@@ -601,6 +640,70 @@
 
 .auth-footer a:hover {
   color: #cffafe;
+}
+
+/* ===== GOOGLE CALLBACK ===== */
+.auth-callback-wrap {
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+.auth-callback-card {
+  border-radius: 24px;
+  padding: 30px 24px;
+  background: rgba(12, 18, 35, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.auth-callback-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto 14px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  color: #fff;
+}
+
+.auth-callback-icon.is-loading {
+  background: linear-gradient(135deg, #6366f1, #06b6d4);
+}
+
+.auth-callback-icon.is-success {
+  background: linear-gradient(135deg, #0ea5e9, #10b981);
+}
+
+.auth-callback-icon.is-error {
+  background: linear-gradient(135deg, #f43f5e, #ef4444);
+}
+
+.auth-callback-card h2 {
+  margin: 0 0 8px;
+  color: #f8fafc;
+  font-size: 22px;
+  font-weight: 800;
+}
+
+.auth-callback-card p {
+  margin: 0;
+  color: #a9b5cf;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.auth-callback-actions {
+  margin-top: 16px;
+}
+
+.auth-callback-actions a {
+  color: #7dd3fc;
+  text-decoration: none;
+  font-weight: 700;
 }
 
 /* ===== TRANSITION LOGIN / REGISTER ===== */

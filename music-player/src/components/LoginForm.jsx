@@ -10,12 +10,16 @@ import {
   FaArrowRight,
   FaEye,
   FaEyeSlash,
+  FaGoogle,
   FaHeadphones,
   FaCompactDisc,
   FaWaveSquare,
 } from "react-icons/fa";
 import AuthLayout from "./AuthLayout";
 import "../styles/components/Auth.css";
+
+const GOOGLE_AUTH_URL =
+  `${process.env.REACT_APP_API_URL || window.location.origin}/api/auth/google`;
 
 const LoginForm = () => {
   const { login } = useAuth();
@@ -34,6 +38,7 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   const errors = useMemo(() => {
     const nextErrors = {};
@@ -91,6 +96,12 @@ const LoginForm = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    setSubmitError("");
+    setGoogleLoading(true);
+    window.location.assign(GOOGLE_AUTH_URL);
   };
 
   return (
@@ -173,6 +184,29 @@ const LoginForm = () => {
               <span className="field-error">{errors.password}</span>
             )}
           </div>
+
+          <div className="auth-divider">
+            <span>Hoặc</span>
+          </div>
+
+          <button
+            type="button"
+            className="auth-btn auth-btn-google"
+            onClick={handleGoogleLogin}
+            disabled={loading || googleLoading}
+          >
+            {googleLoading ? (
+              <>
+                <FaSpinner className="spinner" />
+                <span>Đang chuyển đến Gmail...</span>
+              </>
+            ) : (
+              <>
+                <FaGoogle />
+                <span>Tiếp tục với Gmail</span>
+              </>
+            )}
+          </button>
 
           <button type="submit" className="auth-btn" disabled={loading || !isFormValid}>
             {loading ? (

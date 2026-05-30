@@ -1,4 +1,6 @@
 const Playlist = require("../models/Playlist");
+const Song = require("../models/Song");
+const mongoose = require("mongoose");
 
 const PLAYLIST_SONG_POPULATE = {
   path: "songs",
@@ -168,6 +170,27 @@ const deletePlaylist = async (req, res, next) => {
 const addSongToPlaylist = async (req, res, next) => {
   try {
     const { songId } = req.body;
+
+    if (!songId || !mongoose.Types.ObjectId.isValid(songId)) {
+      return res.status(400).json({
+        success: false,
+        message: "songId khong hop le",
+      });
+    }
+
+    const song = await Song.findOne({
+      _id: songId,
+      status: "approved",
+      isDeleted: { $ne: true },
+    }).select("_id");
+
+    if (!song) {
+      return res.status(400).json({
+        success: false,
+        message: "Bai hat khong ton tai hoac khong kha dung",
+      });
+    }
+
     const playlist = await Playlist.findById(req.params.id);
 
     if (!playlist) {
@@ -184,7 +207,10 @@ const addSongToPlaylist = async (req, res, next) => {
       });
     }
 
-    if (playlist.songs.includes(songId)) {
+    const alreadyInPlaylist = playlist.songs.some(
+      (id) => id.toString() === songId.toString()
+    );
+    if (alreadyInPlaylist) {
       return res.status(400).json({
         success: false,
         message: "Bai hat da co trong playlist",

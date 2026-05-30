@@ -57,9 +57,20 @@ export const formatLRCTime = formatTime;
 export const getCurrentLineIndex = (lines, currentTime) => {
   if (!lines || lines.length === 0) return -1;
   let index = -1;
+
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].time <= currentTime) index = i;
     else break;
   }
+
+  if (index <= 0) return index;
+
+  // If many lines share the same timestamp, keep the first one.
+  // This prevents jumping straight to the last duplicated line.
+  const activeTime = lines[index].time;
+  while (index > 0 && lines[index - 1].time === activeTime) {
+    index -= 1;
+  }
+
   return index;
 };

@@ -1,6 +1,17 @@
 const Notification = require("../models/Notification");
 const User = require("../models/User");
 
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 20;
+const MAX_LIMIT = 50;
+
+const normalizePagination = ({ page, limit } = {}) => {
+  const safePage = Math.max(parseInt(page, 10) || DEFAULT_PAGE, 1);
+  const parsedLimit = parseInt(limit, 10) || DEFAULT_LIMIT;
+  const safeLimit = Math.min(Math.max(parsedLimit, 1), MAX_LIMIT);
+  return { page: safePage, limit: safeLimit, skip: (safePage - 1) * safeLimit };
+};
+
 const notificationService = {
   async create({ recipient, sender, type, title, message, data = {} }) {
     return Notification.create({
@@ -14,7 +25,7 @@ const notificationService = {
   },
 
   async notifyAllAdmins({ sender, type, title, message, data = {} }) {
-    const admins = await User.find({ role: "admin" }).select("_id");
+    const admins = await User.find({ role: "admin" }).select("_id").lean();
     if (!admins.length) return [];
 
     return Notification.insertMany(
@@ -25,15 +36,15 @@ const notificationService = {
         title,
         message,
         data,
-      }))
+      })),
+      { ordered: false }
     );
   },
 
   async markAsRead(notificationId, userId) {
-    return Notification.findOneAndUpdate(
+    return Notification.updateOne(
       { _id: notificationId, recipient: userId },
-      { isRead: true },
-      { new: true }
+      { $set: { isRead: true } }
     );
   },
 
@@ -44,37 +55,66 @@ const notificationService = {
     );
   },
 
-  async getByUser(userId, { page = 1, limit = 20 } = {}) {
-    const skip = (page - 1) * limit;
+  async getByUser(userId, { page = DEFAULT_PAGE, limit = DEFAULT_LIMIT, includeTotal = false } = {}) {
+    const { page: safePage, limit: safeLimit, skip } = normalizePagination({
+      page,
+      limit,
+    });
+    const baseFilter = { recipient: userId, isHidden: false };
+    const unreadFilter = { recipient: userId, isRead: false, isHidden: false };
 
-    const [notifications, total, unreadCount] = await Promise.all([
-      Notification.find({ recipient: userId, isHidden: false })
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit)
-        .populate("sender", "username avatar")
-        .populate("data.songId", "title artist coverImage"),
-      Notification.countDocuments({ recipient: userId, isHidden: false }),
-      Notification.countDocuments({
-        recipient: userId,
-        isRead: false,
-        isHidden: false,
-      }),
+    const notificationPromise = Notification.find(baseFilter)
+      .select("type title message data isRead createdAt sender")
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(safeLimit)
+      .populate({
+        path: "sender",
+        select: "username avatar",
+        options: { lean: true },
+      })
+      .lean();
+
+    const unreadCountPromise = Notification.countDocuments(unreadFilter);
+    const totalPromise = includeTotal
+      ? Notification.countDocuments(baseFilter)
+      : Promise.resolve(null);
+
+    const [notifications, unreadCount, total] = await Promise.all([
+      notificationPromise,
+      unreadCountPromise,
+      totalPromise,
     ]);
 
-    return {
+    const payload = {
       notifications,
-      total,
       unreadCount,
-      page,
-      totalPages: Math.ceil(total / limit),
+      page: safePage,
+      limit: safeLimit,
     };
+
+    if (typeof total === "number") {
+      payload.total = total;
+      payload.totalPages = Math.ceil(total / safeLimit);
+    }
+
+    return payload;
+  },
+
+  async getUnreadCount(userId) {
+    const unreadCount = await Notification.countDocuments({
+      recipient: userId,
+      isRead: false,
+      isHidden: false,
+    });
+
+    return { unreadCount };
   },
 
   async hide(notificationId, userId) {
-    return Notification.findOneAndUpdate(
+    return Notification.updateOne(
       { _id: notificationId, recipient: userId },
-      { isHidden: true }
+      { $set: { isHidden: true } }
     );
   },
 };

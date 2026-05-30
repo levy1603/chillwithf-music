@@ -13,17 +13,59 @@ if (!process.env.MONGO_URI) process.exit(1);
 
 const connectDB = require("./config/db");
 
+const normalizeOrigin = (value = "") => value.trim().replace(/\/+$/, "");
+
+const parseAllowedOrigins = () => {
+  const raw = process.env.CLIENT_URL || "http://localhost:3000";
+  const fromEnv = raw
+    .split(",")
+    .map((item) => normalizeOrigin(item))
+    .filter(Boolean);
+
+  const localDefaults = ["http://localhost:3000", "http://localhost:5000"];
+  const merged = new Set([...fromEnv, ...localDefaults.map(normalizeOrigin)]);
+  return [...merged];
+};
+
+const createCorsOriginChecker = (allowedOrigins) => {
+  return (origin, callback) => {
+    const normalizedOrigin = normalizeOrigin(origin || "");
+    if (!normalizedOrigin || allowedOrigins.includes(normalizedOrigin)) {
+      callback(null, true);
+      return;
+    }
+
+    callback(new Error(`Origin ${origin} is not allowed by CORS`));
+  };
+};
+
+const getVideoContentType = (filePath) => {
+  const ext = path.extname(filePath).toLowerCase();
+  const map = {
+    ".mp4": "video/mp4",
+    ".webm": "video/webm",
+    ".ogg": "video/ogg",
+    ".ogv": "video/ogg",
+    ".mov": "video/quicktime",
+    ".avi": "video/x-msvideo",
+    ".mkv": "video/x-matroska",
+  };
+  return map[ext] || "application/octet-stream";
+};
+
 const startServer = async () => {
   try {
     await connectDB();
     const { startCleanupJob } = require("./jobs/trashCleanup");
     startCleanupJob();
+    const allowedOrigins = parseAllowedOrigins();
+    const corsOriginChecker = createCorsOriginChecker(allowedOrigins);
 
     const app = express();
     const httpServer = http.createServer(app);
     const io = new Server(httpServer, {
       cors: {
-        origin: process.env.CLIENT_URL || "http://localhost:3000",
+        origin: corsOriginChecker,
         methods: ["GET", "POST"],
         credentials: true,
       },
@@ -38,24 +80,25 @@ const startServer = async () => {
     roomHandler(io);
 
     app.use(cors({
-      origin: process.env.CLIENT_URL || "http://localhost:3000",
+      origin: corsOriginChecker,
       credentials: true,
     }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
 
+    const uploadRoot = path.join(__dirname, "uploads");
     const dirs = [
-      "uploads/songs",
-      "uploads/covers",
-      "uploads/videos",
-      "uploads/avatars",
+      path.join(uploadRoot, "songs"),
+      path.join(uploadRoot, "covers"),
+      path.join(uploadRoot, "videos"),
+      path.join(uploadRoot, "avatars"),
     ];
     dirs.forEach((dir) => {
       if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     });
 
     // ===== STATIC FILES =====
-    app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+    app.use("/uploads", express.static(uploadRoot));
 
     // ===== STREAMING VIDEO =====
     app.get("/uploads/videos/:filename", (req, res) => {
@@ -70,6 +113,7 @@ const startServer = async () => {
       const stat     = fs.statSync(filePath);
       const fileSize = stat.size;
       const range    = req.headers.range;
+      const contentType = getVideoContentType(filePath);
 
       if (range) {
         const parts      = range.replace(/bytes=/, "").split("-");
@@ -82,13 +126,13 @@ const startServer = async () => {
           "Content-Range":  `bytes ${start}-${end}/${fileSize}`,
           "Accept-Ranges":  "bytes",
           "Content-Length": chunkSize,
-          "Content-Type":   "video/mp4",
+          "Content-Type":   contentType,
         });
         fileStream.pipe(res);
       } else {
         res.writeHead(200, {
           "Content-Length": fileSize,
-          "Content-Type":   "video/mp4",
+          "Content-Type":   contentType,
         });
         fs.createReadStream(filePath).pipe(res);
       }

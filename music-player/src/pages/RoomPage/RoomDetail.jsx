@@ -7,6 +7,7 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { FaAlignLeft, FaMicrophone, FaVideo, FaArrowLeft, FaCrown } from "react-icons/fa";
 import songAPI from "../../api/songAPI";
+import { SOCKET_URL } from "../../config/api";
 import { parseLRC, getCurrentLineIndex } from "../../utils/lrcParser";
 import RoomPlayer from "./RoomPlayer";
 import RoomChat from "./RoomChat";
@@ -14,7 +15,6 @@ import RoomUsers from "./RoomUsers";
 import RoomQueue from "./RoomQueue";
 import "./RoomPage.css";
 
-const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 const normalizeId = (id) => id?.toString?.() ?? "";
 const hasPlayableSource = (song) =>
   !!(song?.audioUrl || song?.youtubeUrl || song?.videoFile);
@@ -243,7 +243,7 @@ const RoomVideoPanel = React.memo(({ videoURL, song, videoRef, isHost, onToggleP
         ref={videoRef}
         className="room-video-player"
         src={videoURL}
-        poster={song.thumbnail ?? "/images/default-cover.png"}
+        poster={song.thumbnail ?? "/images/default-cover.svg"}
         preload="metadata"
         muted
         playsInline
@@ -349,6 +349,9 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
   const currentUserId = useMemo(() => normalizeId(user?._id), [user?._id]);
 
   useEffect(() => {
+    setLoading(true);
+    setError("");
+
     const token = localStorage.getItem("token");
     const socket = io(SOCKET_URL, {
       auth: { token },
@@ -357,9 +360,21 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
     socketRef.current = socket;
 
     socket.emit("room:join", { roomId });
+    let initTimeout = window.setTimeout(() => {
+      setError("Khong ket noi duoc den phong. Vui long thu lai.");
+      setLoading(false);
+    }, 10000);
+
+    const clearInitTimeout = () => {
+      if (initTimeout) {
+        window.clearTimeout(initTimeout);
+        initTimeout = null;
+      }
+    };
 
     // ── Handlers ──────────────────────────────────────────────────────────────
     const onInit = (data) => {
+      clearInitTimeout();
       dispatch({ type: "INIT", payload: { ...data, currentUserId } });
       setPasswordPrompt({ show: false, error: "", isSubmitting: false });
       setLoading(false);
@@ -422,11 +437,19 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
         lower.includes("mật khẩu");
 
       if (isPasswordIssue) {
+        clearInitTimeout();
         setPasswordPrompt({ show: true, error: message, isSubmitting: false });
         setLoading(false);
         return;
       }
+      clearInitTimeout();
       setError(message || "Có lỗi xảy ra");
+      setLoading(false);
+    };
+
+    const onConnectError = (err) => {
+      clearInitTimeout();
+      setError(err?.message || "Khong the ket noi socket");
       setLoading(false);
     };
 
@@ -442,8 +465,10 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
     socket.on("room:kicked", onKickedHandler);
     socket.on("room:closed", onClosedHandler);
     socket.on("room:error", onRoomError);
+    socket.on("connect_error", onConnectError);
 
     return () => {
+      clearInitTimeout();
       socket.emit("room:leave", { roomId });
       socket.off("room:init", onInit);
       socket.off("room:user-joined", onUserJoined);
@@ -456,6 +481,7 @@ function useRoomSocket({ roomId, user, onKicked, onClosed }) {
       socket.off("room:kicked", onKickedHandler);
       socket.off("room:closed", onClosedHandler);
       socket.off("room:error", onRoomError);
+      socket.off("connect_error", onConnectError);
       socket.disconnect();
     };
   }, [roomId, currentUserId]); // bỏ user object ra khỏi deps → chỉ dùng currentUserId
@@ -907,7 +933,7 @@ const RoomDetail = () => {
               <div className="room-song-mini-card">
                 <img
                   className="room-song-mini-thumb"
-                  src={activeSongForMedia?.thumbnail ?? "/images/default-cover.png"}
+                  src={activeSongForMedia?.thumbnail ?? "/images/default-cover.svg"}
                   alt={activeSongForMedia?.title ?? "song cover"}
                 />
                 <div className="room-song-mini-meta">

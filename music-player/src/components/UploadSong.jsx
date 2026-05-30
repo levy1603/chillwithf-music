@@ -22,13 +22,14 @@ import {
   FaMicrophone,
 } from "react-icons/fa";
 import songAPI from "../api/songAPI";
+import { API_ORIGIN } from "../config/api";
 import LRCEditor from "./LRCEditor";
 import "../styles/components/UploadSong.css";
 
 /* ════════════════════════════════════════════════════════════
    CONSTANTS
 ════════════════════════════════════════════════════════════ */
-const API_BASE = process.env.REACT_APP_API_URL || "http://localhost:5000";
+const API_BASE = API_ORIGIN;
 const MAX_AUDIO_SIZE = 20 * 1024 * 1024;
 const MAX_COVER_SIZE = 5 * 1024 * 1024;
 const MAX_VIDEO_SIZE = 200 * 1024 * 1024;

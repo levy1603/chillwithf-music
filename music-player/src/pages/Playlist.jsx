@@ -1,11 +1,12 @@
 // src/pages/Playlist.js
-import React, { useMemo, useCallback, useState } from "react";
+import React, { useMemo, useCallback, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import SongList from "../components/SongList";
 import ConfirmModal from "../components/common/ConfirmModal";
 import { useMusicContext } from "../context/MusicContext";
 import { useAuth } from "../context/AuthContext";
 import { FaHistory, FaTrash, FaMusic } from "react-icons/fa";
+import songAPI from "../api/songAPI";
 import "../styles/pages/Playlist.css";
 
 const Playlist = () => {
@@ -14,11 +15,55 @@ const Playlist = () => {
   const navigate = useNavigate();
 
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [fetchedSongsById, setFetchedSongsById] = useState({});
+
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    if (listenedSongIds.length === 0) {
+      setFetchedSongsById({});
+      return;
+    }
+
+    const cachedIds = new Set(songs.map((song) => song?._id).filter(Boolean));
+    const missingIds = listenedSongIds.filter(
+      (id) => !cachedIds.has(id) && !fetchedSongsById[id],
+    );
+
+    if (missingIds.length === 0) return;
+
+    let cancelled = false;
+
+    (async () => {
+      const results = await Promise.allSettled(
+        missingIds.map((id) => songAPI.getById(id)),
+      );
+
+      if (cancelled) return;
+
+      const resolved = {};
+      results.forEach((result) => {
+        if (result.status !== "fulfilled") return;
+        const song = result.value?.data;
+        if (!song?._id) return;
+        resolved[song._id] = song;
+      });
+
+      if (Object.keys(resolved).length === 0) return;
+      setFetchedSongsById((prev) => ({ ...prev, ...resolved }));
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, listenedSongIds, songs, fetchedSongsById]);
 
   const listenedSongs = useMemo(() => {
     const songMap = new Map(songs.map((song) => [song._id, song]));
-    return listenedSongIds.map((id) => songMap.get(id)).filter(Boolean);
-  }, [listenedSongIds, songs]);
+    return listenedSongIds
+      .map((id) => songMap.get(id) || fetchedSongsById[id])
+      .filter(Boolean);
+  }, [listenedSongIds, songs, fetchedSongsById]);
 
   const handleOpenClearConfirm = useCallback(() => {
     setShowClearConfirm(true);

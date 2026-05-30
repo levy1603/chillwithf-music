@@ -9,18 +9,19 @@ import {
 import songAPI  from "../api/songAPI";
 import trashAPI from "../api/trashAPI";
 import { useMusicContext } from "../context/MusicContext";
+import { API_ORIGIN } from "../config/api";
 import "../styles/components/MySongsList.css";
 
-const BASE_URL = "http://localhost:5000";
+const BASE_URL = API_ORIGIN;
 
 const getCoverURL = (song) => {
-  if (!song?.coverImage) return "/default-cover.jpg";
+  if (!song?.coverImage) return "/images/default-cover.svg";
   if (song.coverImage.startsWith("http")) return song.coverImage;
   return `${BASE_URL}/uploads/covers/${song.coverImage}`;
 };
 
 const getTrashCoverURL = (songData) => {
-  if (!songData?.coverImage) return "/default-cover.jpg";
+  if (!songData?.coverImage) return "/images/default-cover.svg";
   if (songData.coverImage.startsWith("http")) return songData.coverImage;
   return `${BASE_URL}/uploads/covers/${songData.coverImage}`;
 };
@@ -386,7 +387,7 @@ const MySongsList = ({ onClose }) => {
                                   src={getCoverURL(song)}
                                   alt={song.title}
                                   onError={(e) => {
-                                    e.target.src = "/default-cover.jpg";
+                                    e.target.src = "/images/default-cover.svg";
                                   }}
                                 />
                                 {isPlaying_ && (
@@ -443,7 +444,7 @@ const MySongsList = ({ onClose }) => {
                                   src={getCoverURL(song)}
                                   alt={song.title}
                                   onError={(e) => {
-                                    e.target.src = "/default-cover.jpg";
+                                    e.target.src = "/images/default-cover.svg";
                                   }}
                                 />
                                 <div className="msl-edit-fields-top">
@@ -565,7 +566,7 @@ const MySongsList = ({ onClose }) => {
                               src={getTrashCoverURL(item.songData)}
                               alt={item.songData?.title}
                               onError={(e) => {
-                                e.target.src = "/default-cover.jpg";
+                                e.target.src = "/images/default-cover.svg";
                               }}
                             />
                             <div className="msl-trash-cover-overlay" />

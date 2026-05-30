@@ -1,6 +1,7 @@
 ﻿// src/pages/RoomPage/RoomQueue.jsx
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { FaMusic, FaTrash, FaSearch, FaPlus, FaPlay } from "react-icons/fa";
+import { API_ORIGIN } from "../../config/api";
 
 const formatDuration = (seconds) => {
   if (!seconds) return "--:--";
@@ -9,9 +10,7 @@ const formatDuration = (seconds) => {
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-const API_BASE_URL = (
-  process.env.REACT_APP_API_URL || "http://localhost:5000"
-).replace(/\/+$/, "");
+const API_BASE_URL = API_ORIGIN.replace(/\/+$/, "");
 
 const toMediaUrl = (value, folder) => {
   if (!value || typeof value !== "string") return "";
@@ -43,6 +42,20 @@ const getYoutubeVideoId = (url) => {
     return null;
   }
   return null;
+};
+
+const getYoutubePlaylistId = (url) => {
+  if (!url || typeof url !== "string") return null;
+  const raw = url.trim();
+
+  if (/^PL|^UU|^FL|^OLAK5uy_/.test(raw)) return raw;
+
+  try {
+    const parsed = new URL(raw);
+    return parsed.searchParams.get("list");
+  } catch {
+    return null;
+  }
 };
 
 const RoomQueue = ({
@@ -157,7 +170,7 @@ const RoomQueue = ({
   }, []);
 
   const handleAddSong = useCallback(
-    async (song) => {
+    async (song, options = {}) => {
       if (!onAddSong || isAddingSong) return;
 
       try {
@@ -173,7 +186,7 @@ const RoomQueue = ({
             song?.thumbnail ||
             song?.coverUrl ||
             toMediaUrl(song?.coverImage, "covers") ||
-            "/images/default-cover.png",
+            "/images/default-cover.svg",
           audioUrl: song?.audioUrl || toMediaUrl(song?.audioFile, "songs"),
           youtubeUrl:
             song?.youtubeUrl || song?.videoUrl || song?.videoURL || null,
@@ -191,9 +204,11 @@ const RoomQueue = ({
         }
 
         await onAddSong(normalizedSong);
-        setSearchQuery("");
-        setSearchResults([]);
-        setShowSearch(false);
+        if (!options.keepSearch) {
+          setSearchQuery("");
+          setSearchResults([]);
+          setShowSearch(false);
+        }
       } catch (err) {
         console.error("Lỗi thêm bài hát:", err);
       } finally {
@@ -249,9 +264,43 @@ const RoomQueue = ({
 
   const handleAddYoutubeUrl = useCallback(async () => {
     const raw = youtubeUrl.trim();
+    const playlistId = getYoutubePlaylistId(raw);
+
+    if (playlistId) {
+      try {
+        setYoutubeError("");
+
+        const res = await fetch(
+          `/api/rooms/youtube/playlist?url=${encodeURIComponent(raw)}`
+        );
+        const data = await res.json();
+
+        if (!res.ok || !data?.success) {
+          setYoutubeError(data?.message || "Khong the doc playlist YouTube");
+          return;
+        }
+
+        const videos = Array.isArray(data.videos) ? data.videos : [];
+        if (videos.length === 0) {
+          setYoutubeError("Playlist khong co video hop le");
+          return;
+        }
+
+        for (const video of videos) {
+          await handleAddSong(video, { keepSearch: true });
+        }
+
+        setYoutubeUrl("");
+        setShowSearch(false);
+      } catch (err) {
+        setYoutubeError("Khong the them playlist YouTube");
+      }
+      return;
+    }
+
     const videoId = getYoutubeVideoId(raw);
     if (!videoId) {
-      setYoutubeError("Link YouTube không hợp lệ");
+      setYoutubeError("Link YouTube hoac playlist khong hop le");
       return;
     }
 
@@ -259,7 +308,7 @@ const RoomQueue = ({
 
     const youtubeSong = await buildYoutubeSong(raw);
     if (!youtubeSong) {
-      setYoutubeError("Link YouTube không hợp lệ");
+      setYoutubeError("Link YouTube khong hop le");
       return;
     }
 
@@ -333,12 +382,12 @@ const RoomQueue = ({
                     song.thumbnail ||
                     song.coverUrl ||
                     toMediaUrl(song.coverImage, "covers") ||
-                    "/images/default-cover.png"
+                    "/images/default-cover.svg"
                   }
                   alt={song.title}
                   className="rq-search-thumb"
                   onError={(e) =>
-                    (e.currentTarget.src = "/images/default-cover.png")
+                    (e.currentTarget.src = "/images/default-cover.svg")
                   }
                 />
                 <div className="rq-search-info">
@@ -388,7 +437,7 @@ const RoomQueue = ({
               <input
                 type="text"
                 className="rq-search-input"
-                placeholder="Dán link YouTube để thêm vào hàng chờ..."
+                placeholder="Dan link YouTube video hoac playlist..."
                 value={youtubeUrl}
                 onChange={(e) => setYoutubeUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleAddYoutubeUrl()}
@@ -424,11 +473,11 @@ const RoomQueue = ({
           <span className="rq-np-label">🎵 Đang phát</span>
           <div className="rq-np-item">
             <img
-              src={currentSong.thumbnail || "/images/default-cover.png"}
+              src={currentSong.thumbnail || "/images/default-cover.svg"}
               alt={currentSong.title}
               className="rq-np-thumb"
               onError={(e) =>
-                (e.currentTarget.src = "/images/default-cover.png")
+                (e.currentTarget.src = "/images/default-cover.svg")
               }
             />
             <div className="rq-np-info">
@@ -465,11 +514,11 @@ const RoomQueue = ({
                 <span className="rq-index">{index + 1}</span>
 
                 <img
-                  src={item.thumbnail || "/images/default-cover.png"}
+                  src={item.thumbnail || "/images/default-cover.svg"}
                   alt={item.title}
                   className="rq-thumb"
                   onError={(e) =>
-                    (e.currentTarget.src = "/images/default-cover.png")
+                    (e.currentTarget.src = "/images/default-cover.svg")
                   }
                 />
 

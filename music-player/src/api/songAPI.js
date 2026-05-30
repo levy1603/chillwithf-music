@@ -1,8 +1,9 @@
 ﻿// src/api/songAPI.js
 import axiosClient from "./axiosClient";
 import axios from "axios";
+import { API_BASE_URL, API_ORIGIN } from "../config/api";
 
-const BASE_URL = "http://localhost:5000/api";
+const BASE_URL = API_BASE_URL;
 
 /* â”€â”€ Helper: láº¥y token â”€â”€ */
 const getToken = () => localStorage.getItem("token");
@@ -119,7 +120,7 @@ const songAPI = {
   getAudioURL: (song) => {
     if (!song?.audioFile) return null;
     if (song.audioFile.startsWith("http")) return song.audioFile;
-    return `${BASE_URL.replace("/api", "")}/uploads/songs/${song.audioFile}`;
+    return `${API_ORIGIN}/uploads/songs/${song.audioFile}`;
   },
 
   // Láº¥y URL video
@@ -133,17 +134,17 @@ const songAPI = {
 
     if (!rawVideo) return null;
     if (rawVideo.startsWith("http")) return rawVideo;
-    return `${BASE_URL.replace("/api", "")}/uploads/videos/${rawVideo}`;
+    return `${API_ORIGIN}/uploads/videos/${rawVideo}`;
   },
 
   // Láº¥y URL cover
   getCoverURL: (song) => {
-    if (!song?.coverImage) return null;
+    if (!song?.coverImage) return "/images/default-cover.svg";
     if (song.coverImage === "default-cover.jpg") {
-      return `${BASE_URL.replace("/api", "")}/uploads/covers/default-cover.jpg`;
+      return "/images/default-cover.svg";
     }
     if (song.coverImage.startsWith("http")) return song.coverImage;
-    return `${BASE_URL.replace("/api", "")}/uploads/covers/${song.coverImage}`;
+    return `${API_ORIGIN}/uploads/covers/${song.coverImage}`;
   },
 };
 

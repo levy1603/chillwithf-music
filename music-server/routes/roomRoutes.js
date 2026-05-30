@@ -12,10 +12,12 @@ const {
   verifyRoomPassword,
   closeRoom,
   getRoomMessages,
+  getYoutubePlaylistVideos,
 } = require("../controllers/roomController");
 
 // Public routes
 router.get("/", getRooms);
+router.get("/youtube/playlist", getYoutubePlaylistVideos);
 router.get("/:id", getRoomById);
 router.post("/:id/verify-password", protect, verifyRoomPassword);
 

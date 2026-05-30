@@ -31,7 +31,7 @@ import useSleepTimer from "../hooks/useSleepTimer";
 import SleepTimerPanel from "./SleepTimerPanel";
 import "../styles/components/MusicPlayer.css";
 
-const DEFAULT_COVER = "/images/default-cover.jpg";
+const DEFAULT_COVER = "/images/default-cover.svg";
 
 const shuffleArray = (arr = []) => {
   const result = [...arr];
