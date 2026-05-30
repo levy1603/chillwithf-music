@@ -1402,3 +1402,21 @@
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.7; transform: scale(0.95); }
 }
+
+@media (max-width: 1024px) {
+  .header-center .room-music-btn {
+    padding: 8px 12px;
+    font-size: 0.82rem;
+    gap: 6px;
+  }
+
+  .header-center .room-music-btn span:first-of-type {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .header-center {
+    display: none;
+  }
+}

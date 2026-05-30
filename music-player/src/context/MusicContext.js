@@ -45,6 +45,20 @@ export const MusicProvider = ({ children }) => {
 
   const audioRef = useRef(new Audio());
 
+  // Ensure any orphan audio instance is fully stopped when provider unmounts
+  // (e.g. navigating to /login then remounting app routes).
+  useEffect(() => {
+    const audio = audioRef.current;
+
+    return () => {
+      if (!audio) return;
+      audio.pause();
+      audio.currentTime = 0;
+      audio.removeAttribute("src");
+      audio.load();
+    };
+  }, []);
+
   const getListenedStorageKey = useCallback(() => {
     return user?._id ? `listened_${user._id}` : null;
   }, [user?._id]);

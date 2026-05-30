@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 
 import { AuthProvider, useAuth } from "./context/AuthContext";
@@ -247,6 +248,26 @@ const MusicAppRoutes = () => {
 /* ═══════════════════════════════════════════
    APP ROUTES
 ═══════════════════════════════════════════ */
+const RouteModeManager = () => {
+  const location = useLocation();
+
+  useEffect(() => {
+    const pathname = location.pathname || "";
+    const isAuthRoute =
+      pathname === "/login" ||
+      pathname === "/register" ||
+      pathname === "/auth/google/callback";
+
+    document.body.classList.toggle("auth-route", isAuthRoute);
+
+    return () => {
+      document.body.classList.remove("auth-route");
+    };
+  }, [location.pathname]);
+
+  return null;
+};
+
 function AppRoutes() {
   usePageTitle();
 
@@ -268,6 +289,7 @@ function App() {
     <AuthProvider>
       <Router>
         <NotificationProvider>
+          <RouteModeManager />
           {/*
             SplashWrapper phải nằm trong AuthProvider
             để dùng được useAuth()

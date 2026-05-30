@@ -2,6 +2,7 @@
 
 .auth-page {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 20px;
   display: flex;
   align-items: center;
@@ -348,6 +349,7 @@
 .auth-form-column {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 /* ===== CARD ===== */
@@ -856,6 +858,13 @@
 
 /* ===== RESPONSIVE ===== */
 @media (max-width: 1024px) {
+  .auth-page {
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 16px;
+    padding-bottom: 22px;
+  }
+
   .auth-shell {
     grid-template-columns: 1fr;
     max-width: 680px;
@@ -870,9 +879,25 @@
   }
 }
 
+@media (max-width: 768px) {
+  .auth-showcase {
+    display: none;
+  }
+
+  .auth-shell {
+    max-width: 540px;
+  }
+
+  .auth-form-column {
+    align-items: stretch;
+  }
+}
+
 @media (max-width: 640px) {
   .auth-page {
     padding: 14px;
+    padding-top: 12px;
+    padding-bottom: 20px;
   }
 
   .auth-showcase,

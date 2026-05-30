@@ -1,6 +1,6 @@
 ﻿// components/Sidebar.js
 import React, { useEffect, useMemo, useState, useCallback } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import {
   FaHome,
   FaHeart,
@@ -11,6 +11,7 @@ import {
   FaUserShield,
   FaLayerGroup,
   FaCompass,
+  FaBars,
 } from "react-icons/fa";
 import { useAuth } from "../context/AuthContext";
 import { useMusicContext } from "../context/MusicContext";
@@ -20,19 +21,48 @@ const Sidebar = () => {
   const { isAuthenticated, user } = useAuth();
   const { songs = [] } = useMusicContext();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("sidebarCollapsed") === "true";
   });
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 1024);
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 1024);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    if (!isMobile) {
+      setMobileOpen(false);
+    }
+  }, [isMobile]);
+
+  useEffect(() => {
+    if (isMobile) {
+      setMobileOpen(false);
+    }
+  }, [isMobile, location.pathname, location.search]);
 
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--sidebar-width",
-      collapsed ? "72px" : "248px"
+      isMobile ? "0px" : collapsed ? "72px" : "248px"
     );
-  }, [collapsed]);
+  }, [collapsed, isMobile]);
 
   const handleToggle = useCallback(() => {
+    if (isMobile) {
+      setMobileOpen((prev) => !prev);
+      return;
+    }
+
     setCollapsed((prev) => {
       const next = !prev;
       localStorage.setItem("sidebarCollapsed", String(next));
@@ -42,13 +72,13 @@ const Sidebar = () => {
       );
       return next;
     });
-  }, []);
+  }, [isMobile]);
 
   const mainLinks = useMemo(() => {
     const links = [
       {
         to: "/",
-        label: "Trang chu",
+        label: "Trang Chủ",
         icon: FaHome,
         end: true,
       },
@@ -58,17 +88,17 @@ const Sidebar = () => {
       links.push(
         {
           to: "/favorites",
-          label: "Yeu thich",
+          label: "Yêu Thích",
           icon: FaHeart,
         },
         {
           to: "/playlist",
-          label: "Nhac da nghe",
+          label: "Nhạc Đã Nghe",
           icon: FaListUl,
         },
         {
           to: "/my-playlists",
-          label: "Cac Playlist",
+          label: "Các Playlist",
           icon: FaLayerGroup,
         }
       );
@@ -85,19 +115,21 @@ const Sidebar = () => {
       const normalizedGenre =
         typeof rawGenre === "string" && rawGenre.trim()
           ? rawGenre.trim()
-          : "Khac";
+          : "Khác";
       acc[normalizedGenre] = (acc[normalizedGenre] || 0) + 1;
       return acc;
     }, {});
 
-    const topGenreEntry = Object.entries(genreCounter).sort((a, b) => b[1] - a[1])[0];
-    const topGenreName = topGenreEntry?.[0] || "Khac";
+    const topGenreEntry = Object.entries(genreCounter).sort(
+      (a, b) => b[1] - a[1]
+    )[0];
+    const topGenreName = topGenreEntry?.[0] || "Khác";
     const topGenreCount = topGenreEntry?.[1] || 0;
 
     const topLikedSong = [...safeSongs].sort(
       (a, b) => (b?.likeCount || 0) - (a?.likeCount || 0)
     )[0];
-    const topLikedSongName = topLikedSong?.title || "Chua co du lieu";
+    const topLikedSongName = topLikedSong?.title || "Chưa có dữ liệu";
     const topLikedSongLikes = topLikedSong?.likeCount || 0;
 
     const hotSong = [...safeSongs].sort((a, b) => {
@@ -105,30 +137,30 @@ const Sidebar = () => {
       const scoreB = (b?.playCount || 0) * 0.7 + (b?.likeCount || 0) * 0.3;
       return scoreB - scoreA;
     })[0];
-    const hotSongName = hotSong?.title || "Chua co du lieu";
+    const hotSongName = hotSong?.title || "Chưa có dữ liệu";
     const hotSongPlays = hotSong?.playCount || 0;
 
     return [
       {
         key: "top-genre",
-        label: "Top the loai bai",
+        label: "Thể Loại Hàng Đầu",
         icon: FaLayerGroup,
         to: `/search?genre=${encodeURIComponent(topGenreName)}`,
-        title: `Top the loai: ${topGenreName} (${topGenreCount} bai)`,
+        title: `Thể loại nổi bật: ${topGenreName} (${topGenreCount} bài)`,
       },
       {
         key: "top-liked-song",
-        label: "Bai hat duoc yeu thich",
+        label: "Bài Hát Được Yêu Thích",
         icon: FaHeart,
         to: "/search?sort=likes",
-        title: `Bai duoc thich nhieu: ${topLikedSongName} (${topLikedSongLikes} luot thich)`,
+        title: `Bài được thích nhiều nhất: ${topLikedSongName} (${topLikedSongLikes} lượt thích)`,
       },
       {
         key: "hot-songs",
-        label: "Nhac Hot",
+        label: "Nhạc Hot",
         icon: FaCompactDisc,
         to: "/search?sort=popular",
-        title: `Bai hot hien tai: ${hotSongName} (${hotSongPlays} luot nghe)`,
+        title: `Bài hot hiện tại: ${hotSongName} (${hotSongPlays} lượt nghe)`,
       },
     ];
   }, [songs]);
@@ -136,21 +168,76 @@ const Sidebar = () => {
   const handleExploreClick = useCallback(
     (to) => {
       if (!to) return;
+      if (isMobile) {
+        setMobileOpen(false);
+      }
       navigate(to);
     },
-    [navigate]
+    [isMobile, navigate]
   );
 
   return (
-    <aside className={`sidebar ${collapsed ? "collapsed" : ""}`}>
+    <>
+      {isMobile && (
+        <button
+          type="button"
+          className="sidebar-mobile-trigger"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Mở menu điều hướng"
+          title="Mở menu"
+        >
+          <FaBars />
+        </button>
+      )}
+
+      {isMobile && mobileOpen && (
+        <button
+          type="button"
+          className="sidebar-mobile-overlay"
+          onClick={() => setMobileOpen(false)}
+          aria-label="Đóng menu điều hướng"
+        />
+      )}
+
+      <aside
+        className={`sidebar ${collapsed ? "collapsed" : ""} ${
+          isMobile ? "mobile" : ""
+        } ${isMobile && mobileOpen ? "mobile-open" : ""}`}
+      >
       <button
         type="button"
         className="sidebar-toggle-btn"
         onClick={handleToggle}
-        title={collapsed ? "Mo rong" : "Thu gon"}
-        aria-label={collapsed ? "Mo rong sidebar" : "Thu gon sidebar"}
+        title={
+          isMobile
+            ? mobileOpen
+              ? "Đóng menu"
+              : "Mở menu"
+            : collapsed
+            ? "Mở Rộng"
+            : "Thu Gọn"
+        }
+        aria-label={
+          isMobile
+            ? mobileOpen
+              ? "Đóng thanh bên"
+              : "Mở thanh bên"
+            : collapsed
+            ? "Mở rộng thanh bên"
+            : "Thu gọn thanh bên"
+        }
       >
-        {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
+        {isMobile ? (
+          mobileOpen ? (
+            <FaChevronLeft />
+          ) : (
+            <FaChevronRight />
+          )
+        ) : collapsed ? (
+          <FaChevronRight />
+        ) : (
+          <FaChevronLeft />
+        )}
       </button>
 
       <div className="sidebar-scroll">
@@ -167,6 +254,11 @@ const Sidebar = () => {
                 className="sidebar-link"
                 title={item.label}
                 end={item.end}
+                onClick={() => {
+                  if (isMobile) {
+                    setMobileOpen(false);
+                  }
+                }}
               >
                 <Icon />
                 {!collapsed && <span>{item.label}</span>}
@@ -175,12 +267,12 @@ const Sidebar = () => {
           })}
         </nav>
 
-        {/* KHAM PHA */}
+        {/* KHÁM PHÁ */}
         <div className="sidebar-playlists">
           {!collapsed && (
             <h3 className="sidebar-title sidebar-title-with-icon">
               <FaCompass />
-              <span>KHAM PHA</span>
+              <span>KHÁM PHÁ</span>
             </h3>
           )}
 
@@ -201,23 +293,29 @@ const Sidebar = () => {
           })}
         </div>
 
-        {/* ADMIN */}
+        {/* QUẢN TRỊ */}
         {isAuthenticated && user?.role === "admin" && (
           <div className="sidebar-admin">
-            {!collapsed && <h3 className="sidebar-title">QUAN TRI</h3>}
+            {!collapsed && <h3 className="sidebar-title">QUẢN TRỊ</h3>}
 
             <NavLink
               to="/admin"
               className="sidebar-link sidebar-link-admin"
-              title="Trang quan tri"
+              title="Trang Quản Trị"
+              onClick={() => {
+                if (isMobile) {
+                  setMobileOpen(false);
+                }
+              }}
             >
               <FaUserShield />
-              {!collapsed && <span>Quan tri</span>}
+              {!collapsed && <span>Quản Trị</span>}
             </NavLink>
           </div>
         )}
       </div>
-    </aside>
+      </aside>
+    </>
   );
 };
 

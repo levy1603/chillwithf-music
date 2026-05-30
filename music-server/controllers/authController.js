@@ -51,14 +51,19 @@ const register = async (req, res, next) => {
     const { username, email, password } = req.body;
     const normalizedEmail = normalizeEmail(email);
 
-    const existingUser = await User.findOne({
-      $or: [{ email: normalizedEmail }, { username }],
-    });
-
-    if (existingUser) {
+    const existingEmail = await User.findOne({ email: normalizedEmail }).select("_id");
+    if (existingEmail) {
       return res.status(400).json({
         success: false,
-        message: "Email hoac ten nguoi dung da ton tai",
+        message: "Email da ton tai",
+      });
+    }
+
+    const existingUsername = await User.findOne({ username }).select("_id");
+    if (existingUsername) {
+      return res.status(400).json({
+        success: false,
+        message: "Ten nguoi dung da ton tai",
       });
     }
 
@@ -85,9 +90,26 @@ const register = async (req, res, next) => {
     });
   } catch (error) {
     if (error?.code === 11000) {
+      const duplicateFields = Object.keys(error?.keyPattern || {});
+      const duplicateField = duplicateFields[0] || Object.keys(error?.keyValue || {})[0];
+
+      if (duplicateField === "email") {
+        return res.status(400).json({
+          success: false,
+          message: "Email da ton tai",
+        });
+      }
+
+      if (duplicateField === "username") {
+        return res.status(400).json({
+          success: false,
+          message: "Ten nguoi dung da ton tai",
+        });
+      }
+
       return res.status(400).json({
         success: false,
-        message: "Email hoac ten nguoi dung da ton tai",
+        message: "Du lieu dang ky bi trung, vui long thu thong tin khac",
       });
     }
     next(error);
@@ -313,7 +335,7 @@ const googleCallback = async (req, res) => {
         username,
         email,
         password: randomPassword,
-        googleId: googleId || null,
+        ...(googleId ? { googleId } : {}),
         avatar,
       });
     } else {
