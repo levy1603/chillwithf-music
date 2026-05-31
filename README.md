@@ -5,7 +5,7 @@
 [![Express](https://img.shields.io/badge/Express-5.x-black?logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-8.x-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-Realtime-010101?logo=socket.io&logoColor=white)](https://socket.io/)
-
+## Demo APP
 https://chillwithf-music.vercel.app/
 
 Music Project là một ứng dụng nghe nhạc full-stack, kết hợp giữa trải nghiệm phát nhạc cá nhân và phòng nghe nhạc realtime theo nhóm.
@@ -90,30 +90,7 @@ cd ../music-server
 npm install
 ```
 
-## Biến Môi Trường
 
-### Backend
-
-Tạo file `music-server/.env` với nội dung mẫu:
-
-```env
-PORT=5000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key
-JWT_EXPIRE=30d
-CLIENT_URL=http://localhost:3000
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_api_key
-CLOUDINARY_API_SECRET=your_api_secret
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
-GOOGLE_CLIENT_CALLBACK_URL=http://localhost:3000/auth/google/callback
-```
-
-Khi táº¡o OAuth Client trÃªn Google Cloud, thÃªm `Authorized redirect URI`:
-
-- `http://localhost:5000/api/auth/google/callback`
 
 ## Chạy Ứng Dụng
 

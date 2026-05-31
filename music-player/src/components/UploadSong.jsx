@@ -423,15 +423,20 @@ const UploadSong = () => {
     [formData.lyrics]
   );
 
+  const hasAudioSource = useMemo(
+    () => !!audioFile || !!videoFile,
+    [audioFile, videoFile]
+  );
+
   const canSubmit = useMemo(() => {
     return (
-      !!audioFile &&
+      hasAudioSource &&
       !!coverFile &&
       !!formData.title.trim() &&
       !!formData.artist.trim() &&
       !loading
     );
-  }, [audioFile, coverFile, formData.title, formData.artist, loading]);
+  }, [hasAudioSource, coverFile, formData.title, formData.artist, loading]);
 
   /* ── generic form handler ── */
   const handleChange = useCallback((e) => {
@@ -618,7 +623,7 @@ const UploadSong = () => {
     data.append("releaseYear", formData.releaseYear);
     data.append("lyrics", formData.lyrics);
     data.append("tags", JSON.stringify(tags));
-    data.append("audio", audioFile);
+    if (audioFile) data.append("audio", audioFile);
 
     if (coverFile) data.append("cover", coverFile);
     if (videoFile) data.append("video", videoFile);
@@ -636,8 +641,8 @@ const UploadSong = () => {
       setUploadResult(null);
       setUploadProgress(0);
 
-      if (!audioFile) {
-        setError("Vui lòng chọn file nhạc!");
+      if (!hasAudioSource) {
+        setError("Vui lòng chọn file nhạc hoặc file video!");
         return;
       }
 
@@ -688,7 +693,7 @@ const UploadSong = () => {
         setLoading(false);
       }
     },
-    [audioFile, formData, buildRequestData, lrcData.lines, resetForm, fetchMyUploads]
+    [hasAudioSource, formData, buildRequestData, lrcData.lines, resetForm, fetchMyUploads]
   );
 
   return (
@@ -762,12 +767,13 @@ const UploadSong = () => {
                     {formatFileSize(audioFile.size)}
                   </span>
                 </div>
-              ) : (
-                <>
-                  <span>Chọn file nhạc</span>
-                  <small>MP3, WAV, FLAC (tối đa 20MB)</small>
-                </>
-              )}
+                ) : (
+                  <>
+                    <span>Chọn file nhạc</span>
+                    <small>MP3, WAV, FLAC (tối đa 20MB)</small>
+                    <small>Nếu đã có video, có thể bỏ qua bước này</small>
+                  </>
+                )}
 
               <input
                 ref={audioInputRef}
@@ -806,7 +812,7 @@ const UploadSong = () => {
         <div className="upload-section">
           <h3 className="section-title">
             <FaVideo /> Video bài hát
-            <span className="optional-badge">Không bắt buộc</span>
+            <span className="optional-badge">Tùy chọn / hoặc thay audio</span>
           </h3>
 
           {!videoPreview ? (

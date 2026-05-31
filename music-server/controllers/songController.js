@@ -3,11 +3,14 @@ const Song                    = require("../models/Song");
 const User                    = require("../models/User");
 const Playlist                = require("../models/Playlist");
 const mm                      = require("music-metadata");
-const path                    = require("path");
 const axios                   = require("axios"); 
 const notificationService     = require("../services/notificationService");
 const PlayHistory             = require("../models/PlayHistory");
-const { deleteSongFromCloudinary, deleteFromCloudinary } = require("../config/cloudinary");
+const {
+  cloudinary,
+  deleteSongFromCloudinary,
+  deleteFromCloudinary,
+} = require("../config/cloudinary");
 
 /* ═══════════════════════════════════════════
    HELPERS
@@ -49,6 +52,32 @@ const parseTags = (rawTags) => {
 const getFileUrl = (file) => {
   if (!file) return null;
   return file.path || null;
+};
+
+const extractCloudinaryPublicId = (url = "") => {
+  if (!url || !url.includes("cloudinary.com")) return null;
+
+  const uploadMarker = "/upload/";
+  const uploadIndex = url.indexOf(uploadMarker);
+  if (uploadIndex === -1) return null;
+
+  let publicPath = url.slice(uploadIndex + uploadMarker.length);
+  publicPath = publicPath.split(/[?#]/)[0];
+  publicPath = publicPath.replace(/^v\d+\//, "");
+  publicPath = publicPath.replace(/\.[^/.]+$/, "");
+
+  return publicPath || null;
+};
+
+const buildAudioUrlFromVideo = (videoUrl = "") => {
+  const publicId = extractCloudinaryPublicId(videoUrl);
+  if (!publicId) return null;
+
+  return cloudinary.url(publicId, {
+    resource_type: "video",
+    format: "mp3",
+    secure: true,
+  });
 };
 
 /* ═══════════════════════════════════════════
@@ -206,10 +235,20 @@ const createSong = async (req, res, next) => {
       }
     }
 
+    if (!audioFile && videoFile) {
+      const extractedAudioUrl = buildAudioUrlFromVideo(videoFile);
+
+      if (extractedAudioUrl) {
+        audioFile = extractedAudioUrl;
+        duration = await getAudioDuration(audioFile);
+        console.log("🎬→🎵 Tự động dùng audio tách từ video");
+      }
+    }
+
     if (!audioFile) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng upload file nhạc",
+        message: "Vui lòng upload file nhạc hoặc video có audio",
       });
     }
 
