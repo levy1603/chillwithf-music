@@ -1417,6 +1417,23 @@
 
 @media (max-width: 768px) {
   .header-center {
+    display: flex;
+    flex-shrink: 0;
+  }
+
+  .header-center .room-music-btn {
+    min-height: 40px;
+    padding: 8px 10px;
+    border-radius: 14px;
+    gap: 0;
+  }
+
+  .header-center .room-music-btn span:first-of-type,
+  .header-center .room-badge-live {
     display: none;
+  }
+
+  .header-center .room-icon {
+    font-size: 1.05rem;
   }
 }
