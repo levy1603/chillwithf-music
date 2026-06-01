@@ -3,6 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FaTrash, FaSearch, FaLock, FaGlobe } from "react-icons/fa";
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
+import { API_BASE_URL } from "../../config/api";
 import "../../styles/components/admin/AdminSongs.css";
 
 const INITIAL_TOAST = {
@@ -31,7 +32,7 @@ const AdminPlaylists = () => {
     const fetchPlaylists = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res = await fetch("/api/playlists/public", {
+        const res = await fetch(`${API_BASE_URL}/playlists/public`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
@@ -71,7 +72,7 @@ const AdminPlaylists = () => {
       setDeletingId(selectedPlaylist._id);
 
       const token = localStorage.getItem("token");
-      const res = await fetch(`/api/playlists/${selectedPlaylist._id}`, {
+      const res = await fetch(`${API_BASE_URL}/playlists/${selectedPlaylist._id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

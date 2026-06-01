@@ -11,6 +11,7 @@ import {
 import ConfirmModal from "../common/ConfirmModal";
 import ToastMessage from "../common/ToastMessage";
 import getAvatarURL from "../../utils/getAvatarURL";
+import { API_BASE_URL } from "../../config/api";
 import "../../styles/components/admin/AdminUsers.css";
 
 const INITIAL_TOAST = {
@@ -38,7 +39,7 @@ const AdminUsers = () => {
   const fetchUsers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const res = await fetch("/api/users", {
+      const res = await fetch(`${API_BASE_URL}/users`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       const data = await res.json();
@@ -123,7 +124,7 @@ const AdminUsers = () => {
 
     try {
       if (type === "delete") {
-        const res = await fetch(`/api/users/${userId}`, {
+        const res = await fetch(`${API_BASE_URL}/users/${userId}`, {
           method: "DELETE",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -138,7 +139,7 @@ const AdminUsers = () => {
       }
 
       if (type === "role") {
-        const res = await fetch(`/api/users/${userId}/role`, {
+        const res = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -168,7 +169,7 @@ const AdminUsers = () => {
       }
 
       if (type === "ban") {
-        const res = await fetch(`/api/users/${userId}/ban`, {
+        const res = await fetch(`${API_BASE_URL}/users/${userId}/ban`, {
           method: "PUT",
           headers: { Authorization: `Bearer ${token}` },
         });

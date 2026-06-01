@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { API_BASE_URL } from "../../config/api";
 import "../../styles/components/admin/AdminStats.css";
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -52,7 +53,7 @@ const AdminStats = () => {
     const fetchStats = async () => {
       try {
         const token = localStorage.getItem("token");
-        const res   = await fetch("/api/users/stats", {
+        const res   = await fetch(`${API_BASE_URL}/users/stats`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         const data = await res.json();
