@@ -75,6 +75,27 @@ body::before {
   z-index: 1;
 }
 
+.system-banner {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  background: linear-gradient(90deg, #f59e0b, #ef4444);
+  color: #fff;
+  font-weight: 700;
+  font-size: 13px;
+  z-index: 3;
+}
+
+.system-banner strong {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+
 body.auth-route {
   overflow-y: auto;
   overflow-x: hidden;

@@ -31,6 +31,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import RoomLobby from "./pages/RoomPage/RoomLobby";
 import RoomDetail from "./pages/RoomPage/RoomDetail";
 import usePageTitle from "./hooks/usePageTitle";
+import { API_BASE_URL } from "./config/api";
 import "./App.css";
 
 /* ═══════════════════════════════════════════
@@ -129,6 +130,56 @@ const MainLayout = ({ children, showPlayer = true }) => {
       </div>
       {showPlayer && <MusicPlayer />}
     </>
+  );
+};
+
+const SystemBanner = () => {
+  const [banner, setBanner] = useState({
+    enabled: false,
+    message: "",
+    readOnlyMode: false,
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchSystemState = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/admin/public-settings`);
+        if (!res.ok) return;
+        const data = await res.json();
+        const maintenance = data?.data?.maintenance || {};
+
+        if (!cancelled) {
+          setBanner({
+            enabled: Boolean(maintenance.maintenanceBannerEnabled),
+            message: maintenance.maintenanceMessage || "",
+            readOnlyMode: Boolean(maintenance.readOnlyMode),
+          });
+        }
+      } catch {
+        if (!cancelled) {
+          setBanner((prev) => ({ ...prev, enabled: false }));
+        }
+      }
+    };
+
+    fetchSystemState();
+    const intervalId = window.setInterval(fetchSystemState, 60000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
+  if (!banner.enabled) return null;
+
+  return (
+    <div className="system-banner" role="status" aria-live="polite">
+      <span>{banner.message}</span>
+      {banner.readOnlyMode && <strong>Che do chi doc dang bat</strong>}
+    </div>
   );
 };
 
@@ -296,6 +347,7 @@ function App() {
           */}
           <SplashWrapper>
             <div className="app">
+              <SystemBanner />
               <AppRoutes />
             </div>
           </SplashWrapper>

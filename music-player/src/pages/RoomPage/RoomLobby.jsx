@@ -13,6 +13,7 @@ import {
 import { MdMeetingRoom } from "react-icons/md";
 import { FiHome } from "react-icons/fi";
 import CreateRoomModal from "./CreateRoomModal";
+import { API_BASE_URL } from "../../config/api";
 import "./RoomPage.css";
 
 const normalizeRoomType = (rawType) => {
@@ -66,7 +67,7 @@ const RoomLobby = () => {
   const fetchRooms = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/rooms");
+      const res = await fetch(`${API_BASE_URL}/rooms`);
       const data = await res.json();
       const fetchedRooms = data.rooms || [];
       const roomsWithoutHost = fetchedRooms.filter((room) => !hasValidHost(room));

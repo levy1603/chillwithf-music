@@ -1,7 +1,7 @@
 // src/pages/RoomPage/RoomQueue.jsx
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import { FaMusic, FaTrash, FaSearch, FaPlus, FaPlay } from "react-icons/fa";
-import { API_ORIGIN } from "../../config/api";
+import { API_BASE_URL, API_ORIGIN } from "../../config/api";
 
 const formatDuration = (seconds) => {
   if (!seconds) return "--:--";
@@ -10,13 +10,13 @@ const formatDuration = (seconds) => {
   return `${m}:${s.toString().padStart(2, "0")}`;
 };
 
-const API_BASE_URL = API_ORIGIN.replace(/\/+$/, "");
+const MEDIA_BASE_URL = API_ORIGIN.replace(/\/+$/, "");
 
 const toMediaUrl = (value, folder) => {
   if (!value || typeof value !== "string") return "";
   if (value.startsWith("http")) return value;
-  if (value.startsWith("/uploads/")) return `${API_BASE_URL}${value}`;
-  return `${API_BASE_URL}/uploads/${folder}/${value.replace(/^\/+/, "")}`;
+  if (value.startsWith("/uploads/")) return `${MEDIA_BASE_URL}${value}`;
+  return `${MEDIA_BASE_URL}/uploads/${folder}/${value.replace(/^\/+/, "")}`;
 };
 
 const getYoutubeVideoId = (url) => {
@@ -130,7 +130,7 @@ const RoomQueue = ({
           return;
         }
         const res = await fetch(
-          `/api/songs?search=${encodeURIComponent(normalizedQuery)}&limit=10`,
+          `${API_BASE_URL}/songs?search=${encodeURIComponent(normalizedQuery)}&limit=10`,
           {
             headers: { Authorization: `Bearer ${token}` },
             signal: controller.signal,
@@ -271,7 +271,7 @@ const RoomQueue = ({
         setYoutubeError("");
 
         const res = await fetch(
-          `/api/rooms/youtube/playlist?url=${encodeURIComponent(raw)}`
+          `${API_BASE_URL}/rooms/youtube/playlist?url=${encodeURIComponent(raw)}`
         );
         const data = await res.json();
 

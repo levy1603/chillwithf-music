@@ -15,6 +15,7 @@ if (!process.env.MONGO_URI) {
 }
 
 const connectDB = require("./config/db");
+const { enforceReadOnlyMode } = require("./middleware/readOnlyMode");
 
 const normalizeOrigin = (value = "") => value.trim().replace(/\/+$/, "");
 
@@ -88,6 +89,7 @@ const startServer = async () => {
     }));
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
+    app.use(enforceReadOnlyMode);
 
     const uploadRoot = path.join(__dirname, "uploads");
     const dirs = [
@@ -146,6 +148,7 @@ const startServer = async () => {
     app.use("/api/songs",         require("./routes/songRoutes"));
     app.use("/api/playlists",     require("./routes/playlistRoutes"));
     app.use("/api/users",         require("./routes/userRoutes"));
+    app.use("/api/admin",         require("./routes/adminRoutes"));
     app.use("/api/notifications", require("./routes/notificationRoutes"));
     app.use("/api/trash",         require("./routes/trashRoutes"));
     app.use("/api/rooms",         require("./routes/roomRoutes")); 
@@ -157,6 +160,7 @@ const startServer = async () => {
           songs:         "/api/songs",
           playlists:     "/api/playlists",
           users:         "/api/users",
+          admin:         "/api/admin",
           notifications: "/api/notifications",
           trash:         "/api/trash",
           rooms:         "/api/rooms",

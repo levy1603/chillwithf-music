@@ -1,6 +1,7 @@
 // pages/RoomPage/CreateRoomModal.jsx
 import React, { useState } from "react";
 import { FaTimes, FaLock, FaGlobe } from "react-icons/fa";
+import { API_BASE_URL } from "../../config/api";
 
 const CreateRoomModal = ({ onClose, onCreate }) => {
   const [form, setForm] = useState({
@@ -25,7 +26,7 @@ const CreateRoomModal = ({ onClose, onCreate }) => {
 
     try {
       setLoading(true);
-      const res = await fetch("/api/rooms", {
+      const res = await fetch(`${API_BASE_URL}/rooms`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

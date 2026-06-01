@@ -1,10 +1,11 @@
-// controllers/songController.js
+﻿// controllers/songController.js
 const Song                    = require("../models/Song");
 const User                    = require("../models/User");
 const Playlist                = require("../models/Playlist");
 const mm                      = require("music-metadata");
 const axios                   = require("axios"); 
 const notificationService     = require("../services/notificationService");
+const { getSettingsValue }    = require("../services/adminSettingService");
 const PlayHistory             = require("../models/PlayHistory");
 const {
   cloudinary,
@@ -12,15 +13,15 @@ const {
   deleteFromCloudinary,
 } = require("../config/cloudinary");
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    HELPERS
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 
-/* ── Đọc duration từ URL (Cloudinary) ── */
+/* â”€â”€ Äá»c duration tá»« URL (Cloudinary) â”€â”€ */
 const getAudioDuration = async (audioUrl) => {
   if (!audioUrl) return 0;
   try {
-    // Download một phần nhỏ để đọc metadata
+    // Download má»™t pháº§n nhá» Ä‘á»ƒ Ä‘á»c metadata
     const response = await axios.get(audioUrl, {
       responseType: "arraybuffer",
       headers:      { Range: "bytes=0-1048576" },
@@ -31,12 +32,12 @@ const getAudioDuration = async (audioUrl) => {
     const metadata = await mm.parseBuffer(buffer, { duration: true });
     return Math.round(metadata.format.duration || 0);
   } catch (e) {
-    console.log("⚠️ Không đọc được duration:", e.message);
+    console.log("âš ï¸ KhÃ´ng Ä‘á»c Ä‘Æ°á»£c duration:", e.message);
     return 0;
   }
 };
 
-/* ── Parse tags ── */
+/* â”€â”€ Parse tags â”€â”€ */
 const parseTags = (rawTags) => {
   if (!rawTags) return [];
   if (Array.isArray(rawTags)) return rawTags.filter(Boolean);
@@ -48,7 +49,7 @@ const parseTags = (rawTags) => {
   }
 };
 
-/* ── Lấy URL từ file được upload bởi Cloudinary ── */
+/* â”€â”€ Láº¥y URL tá»« file Ä‘Æ°á»£c upload bá»Ÿi Cloudinary â”€â”€ */
 const getFileUrl = (file) => {
   if (!file) return null;
   return file.path || null;
@@ -80,9 +81,9 @@ const buildAudioUrlFromVideo = (videoUrl = "") => {
   });
 };
 
-/* ═══════════════════════════════════════════
-   PUBLIC: Lấy danh sách bài đã duyệt
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PUBLIC: Láº¥y danh sÃ¡ch bÃ i Ä‘Ã£ duyá»‡t
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getSongs = async (req, res, next) => {
   try {
     const page  = parseInt(req.query.page)  || 1;
@@ -140,9 +141,9 @@ const getSongs = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   PUBLIC: Lấy 1 bài
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PUBLIC: Láº¥y 1 bÃ i
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getSong = async (req, res, next) => {
   try {
     const song = await Song.findOne({
@@ -154,7 +155,7 @@ const getSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -164,9 +165,9 @@ const getSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   PUBLIC: Lấy filter options
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PUBLIC: Láº¥y filter options
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getSongFilterOptions = async (req, res, next) => {
   try {
     const baseMatch = {
@@ -201,13 +202,14 @@ const getSongFilterOptions = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   USER: Upload bài hát
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   USER: Upload bÃ i hÃ¡t
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const createSong = async (req, res, next) => {
   const uploadedUrls = { audio: null, cover: null, video: null };
 
   try {
+    const settings = await getSettingsValue({ createIfMissing: true, useCache: true });
     const {
       title, artist, featuring, album,
       genre, releaseYear, lyrics, lrc, tags: rawTags,
@@ -223,7 +225,7 @@ const createSong = async (req, res, next) => {
         audioFile          = getFileUrl(req.files.audio[0]);
         uploadedUrls.audio = audioFile;
         duration           = await getAudioDuration(audioFile);
-        console.log(`🎵 Duration: ${duration}s`);
+        console.log(`ðŸŽµ Duration: ${duration}s`);
       }
       if (req.files.cover?.[0]) {
         coverImage         = getFileUrl(req.files.cover[0]);
@@ -241,18 +243,40 @@ const createSong = async (req, res, next) => {
       if (extractedAudioUrl) {
         audioFile = extractedAudioUrl;
         duration = await getAudioDuration(audioFile);
-        console.log("🎬→🎵 Tự động dùng audio tách từ video");
+        console.log("ðŸŽ¬â†’ðŸŽµ Tá»± Ä‘á»™ng dÃ¹ng audio tÃ¡ch tá»« video");
       }
     }
 
     if (!audioFile) {
       return res.status(400).json({
         success: false,
-        message: "Vui lòng upload file nhạc hoặc video có audio",
+        message: "Vui lÃ²ng upload file nháº¡c hoáº·c video cÃ³ audio",
+      });
+    }
+
+    const maxUploadsPerDay = Number(
+      settings?.moderation?.maxUploadsPerUserPerDay || 8
+    );
+    const dayStart = new Date();
+    dayStart.setHours(0, 0, 0, 0);
+    const dayEnd = new Date();
+    dayEnd.setHours(23, 59, 59, 999);
+
+    const uploadedToday = await Song.countDocuments({
+      uploadedBy: req.user._id,
+      createdAt: { $gte: dayStart, $lte: dayEnd },
+      isDeleted: { $ne: true },
+    });
+
+    if (uploadedToday >= maxUploadsPerDay) {
+      return res.status(429).json({
+        success: false,
+        message: `Ban da dat gioi han ${maxUploadsPerDay} bai upload trong hom nay`,
       });
     }
 
     const tags = parseTags(rawTags);
+    const autoApprove = Boolean(settings?.moderation?.autoApproveUploads);
 
     const song = await Song.create({
       title,
@@ -269,41 +293,45 @@ const createSong = async (req, res, next) => {
       coverImage,  
       videoFile,   
       uploadedBy:  req.user._id,
-      status:      "pending",
+      status:      autoApprove ? "approved" : "pending",
     });
 
     const populatedSong = await Song.findById(song._id)
       .populate("uploadedBy", "username avatar");
 
-    console.log(`🎤 LRC:  ${lrc  ? `Có (${lrc.length} ký tự)` : "Không"}`);
-    console.log(`🏷️  Tags: ${tags.length > 0 ? tags.join(", ") : "Không có"}`);
+    console.log(`ðŸŽ¤ LRC:  ${lrc  ? `CÃ³ (${lrc.length} kÃ½ tá»±)` : "KhÃ´ng"}`);
+    console.log(`ðŸ·ï¸  Tags: ${tags.length > 0 ? tags.join(", ") : "KhÃ´ng cÃ³"}`);
 
-    try {
-      await notificationService.notifyAllAdmins({
-        sender:  req.user._id,
-        type:    "new_upload",
-        title:   "🎵 Bài hát mới chờ duyệt",
-        message: `${req.user.username} vừa upload "${title}" (${genre}) - cần phê duyệt`,
-        data: {
-          songId:    song._id,
-          songTitle: title,
-          artist,
-          coverImage,
-          hasLRC:    !!lrc,
-          hasTags:   tags.length > 0,
-        },
-      });
-    } catch (notifErr) {
-      console.error("⚠️ Lỗi gửi notification:", notifErr.message);
+    if (!autoApprove) {
+      try {
+        await notificationService.notifyAllAdmins({
+          sender: req.user._id,
+          type: "new_upload",
+          title: "ðŸŽµ BÃ i hÃ¡t má»›i chá» duyá»‡t",
+          message: `${req.user.username} vá»«a upload "${title}" (${genre}) - cáº§n phÃª duyá»‡t`,
+          data: {
+            songId: song._id,
+            songTitle: title,
+            artist,
+            coverImage,
+            hasLRC: !!lrc,
+            hasTags: tags.length > 0,
+          },
+        });
+      } catch (notifErr) {
+        console.error("âš ï¸ Lá»—i gá»­i notification:", notifErr.message);
+      }
     }
 
     res.status(201).json({
       success: true,
-      message: "Upload thành công! Bài hát đang chờ Admin duyệt.",
+      message: autoApprove
+        ? "Upload thanh cong! Bai hat da duoc duyet tu dong."
+        : "Upload thÃ nh cÃ´ng! BÃ i hÃ¡t Ä‘ang chá» Admin duyá»‡t.",
       data:    populatedSong,
     });
   } catch (error) {
-    console.error("❌ Lỗi createSong - rollback Cloudinary:", error.message);
+    console.error("âŒ Lá»—i createSong - rollback Cloudinary:", error.message);
     await Promise.allSettled([
       uploadedUrls.audio && deleteFromCloudinary(uploadedUrls.audio, "video"),
       uploadedUrls.cover && deleteFromCloudinary(uploadedUrls.cover, "image"),
@@ -314,9 +342,9 @@ const createSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   USER: Lịch sử upload của tôi
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   USER: Lá»‹ch sá»­ upload cá»§a tÃ´i
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getMySongs = async (req, res, next) => {
   try {
     const songs = await Song.find({
@@ -338,9 +366,9 @@ const getMySongs = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   ADMIN: Tất cả uploads
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ADMIN: Táº¥t cáº£ uploads
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getAllUploadsAdmin = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
@@ -379,9 +407,9 @@ const getAllUploadsAdmin = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   ADMIN: Duyệt bài
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ADMIN: Duyá»‡t bÃ i
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const approveSong = async (req, res, next) => {
   try {
     const song = await Song.findByIdAndUpdate(
@@ -400,7 +428,7 @@ const approveSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -409,8 +437,8 @@ const approveSong = async (req, res, next) => {
         recipient: song.uploadedBy._id,
         sender:    req.user._id,
         type:      "song_approved",
-        title:     "✅ Bài hát đã được duyệt!",
-        message:   `Bài hát "${song.title}" của bạn đã được phê duyệt 🎉`,
+        title:     "âœ… BÃ i hÃ¡t Ä‘Ã£ Ä‘Æ°á»£c duyá»‡t!",
+        message:   `BÃ i hÃ¡t "${song.title}" cá»§a báº¡n Ä‘Ã£ Ä‘Æ°á»£c phÃª duyá»‡t ðŸŽ‰`,
         data: {
           songId:     song._id,
           songTitle:  song.title,
@@ -419,12 +447,12 @@ const approveSong = async (req, res, next) => {
         },
       });
     } catch (notifErr) {
-      console.error("⚠️ Lỗi notification approve:", notifErr.message);
+      console.error("âš ï¸ Lá»—i notification approve:", notifErr.message);
     }
 
     res.status(200).json({
       success: true,
-      message: `Đã duyệt bài "${song.title}"`,
+      message: `ÄÃ£ duyá»‡t bÃ i "${song.title}"`,
       data:    song,
     });
   } catch (error) {
@@ -432,12 +460,12 @@ const approveSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   ADMIN: Từ chối bài
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ADMIN: Tá»« chá»‘i bÃ i
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const rejectSong = async (req, res, next) => {
   try {
-    const rejectReason = req.body.reason || "Không đáp ứng tiêu chuẩn";
+    const rejectReason = req.body.reason || "KhÃ´ng Ä‘Ã¡p á»©ng tiÃªu chuáº©n";
 
     const song = await Song.findByIdAndUpdate(
       req.params.id,
@@ -455,7 +483,7 @@ const rejectSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -464,8 +492,8 @@ const rejectSong = async (req, res, next) => {
         recipient: song.uploadedBy._id,
         sender:    req.user._id,
         type:      "song_rejected",
-        title:     "❌ Bài hát bị từ chối",
-        message:   `Bài hát "${song.title}" chưa được phê duyệt.`,
+        title:     "âŒ BÃ i hÃ¡t bá»‹ tá»« chá»‘i",
+        message:   `BÃ i hÃ¡t "${song.title}" chÆ°a Ä‘Æ°á»£c phÃª duyá»‡t.`,
         data: {
           songId:      song._id,
           songTitle:   song.title,
@@ -475,12 +503,12 @@ const rejectSong = async (req, res, next) => {
         },
       });
     } catch (notifErr) {
-      console.error("⚠️ Lỗi notification reject:", notifErr.message);
+      console.error("âš ï¸ Lá»—i notification reject:", notifErr.message);
     }
 
     res.status(200).json({
       success: true,
-      message: `Đã từ chối bài "${song.title}"`,
+      message: `ÄÃ£ tá»« chá»‘i bÃ i "${song.title}"`,
       data:    song,
     });
   } catch (error) {
@@ -488,9 +516,9 @@ const rejectSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   USER/ADMIN: Update bài hát
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   USER/ADMIN: Update bÃ i hÃ¡t
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const updateSong = async (req, res, next) => {
   const newUrls = { audio: null, cover: null, video: null };
 
@@ -499,22 +527,22 @@ const updateSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
-    /* ── Kiểm tra quyền ── */
+    /* â”€â”€ Kiá»ƒm tra quyá»n â”€â”€ */
     if (
       song.uploadedBy.toString() !== req.user._id.toString() &&
       req.user.role !== "admin"
     ) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền chỉnh sửa bài hát này",
+        message: "Báº¡n khÃ´ng cÃ³ quyá»n chá»‰nh sá»­a bÃ i hÃ¡t nÃ y",
       });
     }
 
-    /* ── Build updateData ── */
+    /* â”€â”€ Build updateData â”€â”€ */
     const updateData  = {};
     const textFields  = ["title", "artist", "featuring", "album", "genre", "lyrics", "lrc"];
     textFields.forEach((field) => {
@@ -559,8 +587,8 @@ const updateSong = async (req, res, next) => {
           await notificationService.notifyAllAdmins({
             sender:  req.user._id,
             type:    "new_upload",
-            title:   "🔄 Bài hát được cập nhật - chờ duyệt lại",
-            message: `${req.user.username} đã cập nhật "${song.title}" - cần duyệt lại`,
+            title:   "ðŸ”„ BÃ i hÃ¡t Ä‘Æ°á»£c cáº­p nháº­t - chá» duyá»‡t láº¡i",
+            message: `${req.user.username} Ä‘Ã£ cáº­p nháº­t "${song.title}" - cáº§n duyá»‡t láº¡i`,
             data: {
               songId:    song._id,
               songTitle: song.title,
@@ -569,7 +597,7 @@ const updateSong = async (req, res, next) => {
             },
           });
         } catch (notifErr) {
-          console.error("⚠️ Lỗi notification update:", notifErr.message);
+          console.error("âš ï¸ Lá»—i notification update:", notifErr.message);
         }
       }
     }
@@ -597,11 +625,11 @@ const updateSong = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Cập nhật thành công",
+      message: "Cáº­p nháº­t thÃ nh cÃ´ng",
       data:    updatedSong,
     });
   } catch (error) {
-    console.error("❌ Lỗi updateSong - rollback Cloudinary:", error.message);
+    console.error("âŒ Lá»—i updateSong - rollback Cloudinary:", error.message);
     await Promise.allSettled([
       newUrls.audio && deleteFromCloudinary(newUrls.audio, "video"),
       newUrls.cover && deleteFromCloudinary(newUrls.cover, "image"),
@@ -612,16 +640,16 @@ const updateSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   USER/ADMIN: Xóa bài hát
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   USER/ADMIN: XÃ³a bÃ i hÃ¡t
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const deleteSong = async (req, res, next) => {
   try {
     const song = await Song.findById(req.params.id);
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -631,7 +659,7 @@ const deleteSong = async (req, res, next) => {
     ) {
       return res.status(403).json({
         success: false,
-        message: "Bạn không có quyền xóa bài hát này",
+        message: "Báº¡n khÃ´ng cÃ³ quyá»n xÃ³a bÃ i hÃ¡t nÃ y",
       });
     }
 
@@ -651,16 +679,16 @@ const deleteSong = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Xóa bài hát thành công",
+      message: "XÃ³a bÃ i hÃ¡t thÃ nh cÃ´ng",
     });
   } catch (error) {
     next(error);
   }
 };
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    PUBLIC: Play song
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const playSong = async (req, res, next) => {
   try {
     const song = await Song.findByIdAndUpdate(
@@ -672,7 +700,7 @@ const playSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -681,7 +709,7 @@ const playSong = async (req, res, next) => {
       user:     req.user?._id || null,
       playedAt: new Date(),
     }).catch((err) => {
-      console.error("⚠️ Lỗi lưu PlayHistory:", err.message);
+      console.error("âš ï¸ Lá»—i lÆ°u PlayHistory:", err.message);
     });
 
     res.status(200).json({
@@ -693,9 +721,9 @@ const playSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    USER: Like / Unlike
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const likeSong = async (req, res, next) => {
   try {
     const songId = req.params.id;
@@ -709,7 +737,7 @@ const likeSong = async (req, res, next) => {
     if (!song) {
       return res.status(404).json({
         success: false,
-        message: "Không tìm thấy bài hát",
+        message: "KhÃ´ng tÃ¬m tháº¥y bÃ i hÃ¡t",
       });
     }
 
@@ -724,7 +752,7 @@ const likeSong = async (req, res, next) => {
       ]);
       return res.status(200).json({
         success: true,
-        message: "Đã bỏ thích",
+        message: "ÄÃ£ bá» thÃ­ch",
         data:    { isLiked: false },
       });
     }
@@ -736,7 +764,7 @@ const likeSong = async (req, res, next) => {
 
     res.status(200).json({
       success: true,
-      message: "Đã thích",
+      message: "ÄÃ£ thÃ­ch",
       data:    { isLiked: true },
     });
   } catch (error) {
@@ -744,9 +772,9 @@ const likeSong = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
-   PUBLIC: Top bài hát
-═══════════════════════════════════════════ */
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PUBLIC: Top bÃ i hÃ¡t
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 const getTopSongs = async (req, res, next) => {
   try {
     const limit = parseInt(req.query.limit) || 10;
@@ -769,9 +797,9 @@ const getTopSongs = async (req, res, next) => {
   }
 };
 
-/* ═══════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    EXPORTS
-═══════════════════════════════════════════ */
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
 module.exports = {
   getSongs,
   getSong,
@@ -787,3 +815,4 @@ module.exports = {
   approveSong,
   rejectSong,
 };
+

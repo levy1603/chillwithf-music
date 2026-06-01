@@ -3,6 +3,7 @@ const User = require("../models/User");
 const Song = require("../models/Song");
 const axios = require("axios");
 const crypto = require("crypto");
+const { getSettingsValue } = require("../services/adminSettingService");
 
 const getClientAppUrl = () =>
   process.env.CLIENT_URL || "http://localhost:3000";
@@ -20,6 +21,16 @@ const redirectGoogleError = (res, message) => {
 };
 
 const normalizeEmail = (value = "") => value.toString().trim().toLowerCase();
+const isStrongPassword = (value = "") => {
+  const password = String(value || "");
+  return (
+    password.length >= 8 &&
+    /[a-z]/.test(password) &&
+    /[A-Z]/.test(password) &&
+    /\d/.test(password) &&
+    /[^A-Za-z0-9]/.test(password)
+  );
+};
 
 const makeUsernameSeed = (value = "") => {
   const normalized = value
@@ -50,6 +61,15 @@ const register = async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
     const normalizedEmail = normalizeEmail(email);
+    const settings = await getSettingsValue({ createIfMissing: true, useCache: true });
+
+    if (settings?.security?.forceStrongPassword && !isStrongPassword(password)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Mat khau phai co it nhat 8 ky tu, gom chu hoa, chu thuong, so va ky tu dac biet",
+      });
+    }
 
     const existingEmail = await User.findOne({ email: normalizedEmail }).select("_id");
     if (existingEmail) {
@@ -210,6 +230,7 @@ const getMe = async (req, res, next) => {
 const changePassword = async (req, res, next) => {
   try {
     const { currentPassword, newPassword } = req.body;
+    const settings = await getSettingsValue({ createIfMissing: true, useCache: true });
     const user = await User.findById(req.user._id).select("+password");
 
     if (!user?.password) {
@@ -224,6 +245,14 @@ const changePassword = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Mat khau hien tai khong dung",
+      });
+    }
+
+    if (settings?.security?.forceStrongPassword && !isStrongPassword(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Mat khau moi phai co it nhat 8 ky tu, gom chu hoa, chu thuong, so va ky tu dac biet",
       });
     }
 

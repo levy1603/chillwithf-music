@@ -7,7 +7,7 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../context/AuthContext";
 import { FaAlignLeft, FaMicrophone, FaVideo, FaArrowLeft, FaCrown } from "react-icons/fa";
 import songAPI from "../../api/songAPI";
-import { SOCKET_URL } from "../../config/api";
+import { API_BASE_URL, SOCKET_URL } from "../../config/api";
 import { parseLRC, getCurrentLineIndex } from "../../utils/lrcParser";
 import RoomPlayer from "./RoomPlayer";
 import RoomChat from "./RoomChat";
@@ -769,7 +769,7 @@ const RoomDetail = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await fetch(`/api/rooms/${roomId}`, {
+      await fetch(`${API_BASE_URL}/rooms/${roomId}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
