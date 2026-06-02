@@ -1,4 +1,3 @@
-// src/pages/Home.js
 import React, { useMemo, useState } from "react";
 import {
   FaMusic,
@@ -7,7 +6,6 @@ import {
   FaWaveSquare,
   FaFire,
   FaSearch,
-  FaHistory,
   FaStar,
 } from "react-icons/fa";
 import SongList from "../components/SongList";
@@ -25,14 +23,8 @@ const MOOD_CHIPS = [
 ];
 
 const Home = () => {
-  const {
-    filteredSongs = [],
-    searchTerm,
-    loading,
-    searchLoading,
-    songs = [],
-    recentlyPlayedSongs = [],
-  } = useMusicContext();
+  const { filteredSongs = [], searchTerm, loading, searchLoading, songs = [] } =
+    useMusicContext();
 
   const [activeMood, setActiveMood] = useState("all");
 
@@ -43,9 +35,7 @@ const Home = () => {
   }, [songs]);
 
   const totalArtists = useMemo(() => {
-    const artists = new Set(
-      songs.map((song) => song.artist).filter(Boolean)
-    );
+    const artists = new Set(songs.map((song) => song.artist).filter(Boolean));
     return artists.size;
   }, [songs]);
 
@@ -57,6 +47,22 @@ const Home = () => {
     return [...songs]
       .sort((a, b) => (b.playCount || 0) - (a.playCount || 0))
       .slice(0, 4);
+  }, [songs]);
+
+  const topArtist = useMemo(() => {
+    if (!songs.length) return "Chưa có dữ liệu";
+
+    const artistMap = songs.reduce((map, song) => {
+      const artist = song.artist?.trim();
+      if (!artist) return map;
+      map.set(artist, (map.get(artist) || 0) + 1);
+      return map;
+    }, new Map());
+
+    const [artistName] =
+      [...artistMap.entries()].sort((a, b) => b[1] - a[1])[0] || [];
+
+    return artistName || "Chưa có dữ liệu";
   }, [songs]);
 
   const moodFilteredSongs = useMemo(() => {
@@ -92,7 +98,6 @@ const Home = () => {
 
   return (
     <div className="home-page">
-      {/* HERO */}
       <section className="home-hero">
         <div className="home-hero-content">
           <div className="home-hero-badge">
@@ -155,7 +160,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* STATS */}
       <section className="home-stats">
         <div className="home-stat-card">
           <div className="home-stat-icon">
@@ -190,7 +194,6 @@ const Home = () => {
         </div>
       </section>
 
-      {/* MOOD CHIPS */}
       <section className="home-moods">
         <div className="home-section-header compact">
           <div>
@@ -215,7 +218,54 @@ const Home = () => {
         </div>
       </section>
 
-      {/* FEATURED PICKS */}
+      <section className="home-quick-discover">
+        <div className="home-section-header compact">
+          <div>
+            <h2>
+              <FaStar /> Khám phá nhanh
+            </h2>
+            <p>Gợi ý tức thì dựa trên thư viện hiện tại của bạn</p>
+          </div>
+        </div>
+
+        <div className="home-discover-grid">
+          <div className="discover-card">
+            <div className="discover-card-icon">
+              <FaFire />
+            </div>
+            <div className="discover-card-content">
+              <strong>Đang nổi bật</strong>
+              <p>{featuredPicks[0]?.title || "Chưa có bài hát nổi bật"}</p>
+            </div>
+          </div>
+
+          <div className="discover-card">
+            <div className="discover-card-icon">
+              <FaCompactDisc />
+            </div>
+            <div className="discover-card-content">
+              <strong>Nghệ sĩ nổi bật</strong>
+              <p>{topArtist}</p>
+            </div>
+          </div>
+
+          <div className="discover-card">
+            <div className="discover-card-icon">
+              <FaHeadphones />
+            </div>
+            <div className="discover-card-content">
+              <strong>Playlist hiện tại</strong>
+              <p>
+                {moodFilteredSongs.length} bài hát cho mood{" "}
+                {activeMood === "all"
+                  ? "Tất cả"
+                  : activeMood.charAt(0).toUpperCase() + activeMood.slice(1)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {featuredPicks.length > 0 && (
         <section className="home-featured">
           <div className="home-section-header">
@@ -247,36 +297,6 @@ const Home = () => {
         </section>
       )}
 
-      {/* RECENTLY PLAYED */}
-      {recentlyPlayedSongs.length > 0 && (
-        <section className="home-recently-played">
-          <div className="home-section-header">
-            <div>
-              <h2>
-                <FaHistory /> Nghe gần đây
-              </h2>
-              <p>Những bài hát bạn vừa phát gần đây</p>
-            </div>
-          </div>
-
-          <div className="home-recent-grid">
-            {recentlyPlayedSongs.slice(0, 6).map((song) => (
-              <div key={song._id} className="recent-card">
-                <div className="recent-card-icon">
-                  <FaMusic />
-                </div>
-
-                <div className="recent-card-info">
-                  <strong>{song.title}</strong>
-                  <span>{song.artist}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* SONG LIST */}
       <section className="home-song-section">
         <div className="home-section-header">
           <div>
